@@ -132,8 +132,13 @@ async def safe_fetch(
             try:
                 addrs = await resolve(host, port)
             except OSError as exc:
-                raise FetchFailed(f"Не удалось найти сайт {host}") from exc
-            if not addrs or not all(ip_allowed(a) for a in addrs):
+                if pin:
+                    raise FetchFailed(f"Не удалось найти сайт {host}") from exc
+                # Через обязательный исходящий прокси DNS разрешает прокси, а локальный резолвер может
+                # быть недоступен. Внутренняя сеть контейнера через внешний прокси недостижима; имена и
+                # IP-литералы уже проверены validate_url (риск описан в README, раздел «Безопасность»).
+                addrs = []
+            if (pin and not addrs) or not all(ip_allowed(a) for a in addrs):
                 raise BlockedUrl("Адрес внутренней сети запрещён")
             parts = urlsplit(current)
             headers = {"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml,text/plain;q=0.8"}
