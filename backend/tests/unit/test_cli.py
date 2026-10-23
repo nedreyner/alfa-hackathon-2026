@@ -8,7 +8,7 @@ runner = CliRunner()
 def test_help_lists_all_groups() -> None:
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    for name in [*GROUPS, "init", "worker", "precompute"]:
+    for name in [*GROUPS, "db", "init", "worker", "precompute"]:
         assert name in result.output
 
 

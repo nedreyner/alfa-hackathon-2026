@@ -33,7 +33,6 @@ def _stub_group(name: str, help_text: str) -> typer.Typer:
 
 
 GROUPS: dict[str, str] = {
-    "db": "SQLite: миграции и обслуживание.",
     "data": "CSV → DuckDB, синтетика, проверка данных, профили.",
     "llm": "LLM-шлюз: probe, бюджет, кеш.",
     "ingest": "Сбор новостей: RSS, seed.",
@@ -50,6 +49,26 @@ GROUPS: dict[str, str] = {
 
 for _name, _help in GROUPS.items():
     app.add_typer(_stub_group(_name, _help), name=_name)
+
+
+db_app = typer.Typer(help="SQLite: миграции и обслуживание.", no_args_is_help=True)
+app.add_typer(db_app, name="db")
+
+
+@db_app.command("migrate")
+def db_migrate() -> None:
+    """Применить миграции SQLite (идемпотентно)."""
+    from alfa_insight.db.sqlite import SqliteDB
+    from alfa_insight.settings import get_settings
+
+    settings = get_settings()
+    db = SqliteDB(settings.sqlite_path)
+    applied = db.migrate()
+    db.close()
+    typer.echo(
+        f"{settings.sqlite_path}: применено миграций {len(applied)}"
+        + (f" ({', '.join(applied)})" if applied else "")
+    )
 
 
 @app.command("init")
