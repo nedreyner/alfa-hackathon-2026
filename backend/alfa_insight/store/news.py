@@ -179,6 +179,35 @@ class NewsStore:
         params.append(news_id)
         self.db.execute(f"UPDATE news SET {', '.join(sets)} WHERE id = ?", params)
 
+    def dedup_index_rows(
+        self, simhash_since: str, content_since: str
+    ) -> tuple[list[tuple[int, int]], dict[str, int]]:
+        """simhash недублей за 72 ч и content_hash недублей за 7 дней (для Deduper)."""
+        from alfa_insight.text.simhash import from_signed
+
+        sims = [
+            (r["id"], from_signed(r["simhash"]))
+            for r in self.db.query(
+                "SELECT id, simhash FROM news WHERE published_at > ? AND simhash IS NOT NULL "
+                "AND status IN ('extracted', 'tagged', 'clustered')",
+                (simhash_since,),
+            )
+        ]
+        hashes: dict[str, int] = {}
+        for r in self.db.query(
+            "SELECT id, content_hash FROM news WHERE published_at > ? AND content_hash IS NOT NULL "
+            "AND status NOT IN ('duplicate', 'new') ORDER BY id",
+            (content_since,),
+        ):
+            hashes.setdefault(r["content_hash"], r["id"])
+        return sims, hashes
+
+    def set_prefilter(self, news_id: int, score: float, simhash_signed: int | None) -> None:
+        self.db.execute(
+            "UPDATE news SET prefilter_score = ?, simhash = COALESCE(?, simhash) WHERE id = ?",
+            (score, simhash_signed, news_id),
+        )
+
     def update_dates(self, shifts: dict[int, tuple[str, str]]) -> None:
         with self.db.tx():
             for news_id, (published_at, fetched_at) in shifts.items():
