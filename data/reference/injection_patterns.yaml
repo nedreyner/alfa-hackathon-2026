@@ -1,0 +1,24 @@
+# Шаблоны промпт-инъекций (docs/11-security.md §4). Регулярки без учёта регистра.
+version: 1
+patterns:
+  - {id: ru_ignore_instructions, lang: ru, regex: "игнорируй (все )?(предыдущие|прошлые|вышеуказанные) (инструкции|указания)"}
+  - {id: ru_forget_instructions, lang: ru, regex: "забудь (все )?(инструкции|правила)"}
+  - {id: ru_you_are_now, lang: ru, regex: "ты теперь"}
+  - {id: ru_new_instruction, lang: ru, regex: "новая инструкция"}
+  - {id: ru_system_prompt, lang: ru, regex: "системн(ый|ое) (промпт|сообщение)"}
+  - {id: ru_reveal_prompt, lang: ru, regex: "выведи (свой )?(промпт|инструкции)"}
+  - {id: ru_hide_from_user, lang: ru, regex: "не сообщай пользователю"}
+  - {id: ru_pretend, lang: ru, regex: "представь,? что ты"}
+  - {id: en_ignore_instructions, lang: en, regex: "ignore (all )?(previous|prior|above) (instructions|prompts)"}
+  - {id: en_disregard, lang: en, regex: "disregard (the )?(previous|above)"}
+  - {id: en_you_are_now, lang: en, regex: "you are now"}
+  - {id: en_system_prompt, lang: en, regex: "system prompt"}
+  - {id: en_developer_mode, lang: en, regex: "developer mode"}
+  - {id: en_jailbreak, lang: en, regex: "jailbreak"}
+  - {id: en_act_as, lang: en, regex: "\\bact as\\b"}
+  - {id: struct_role_tag, lang: any, regex: "<\\s*/?\\s*(system|assistant|untrusted_document)"}
+  - {id: struct_inst, lang: any, regex: "\\[INST\\]"}
+  - {id: struct_im_start, lang: any, regex: "<\\|im_start\\|>"}
+  - {id: struct_md_system, lang: any, regex: "###\\s*(system|instruction)"}
+  - {id: base64_blob, lang: any, regex: "[A-Za-z0-9+/]{200,}={0,2}"}
+max_invisible_chars: 5

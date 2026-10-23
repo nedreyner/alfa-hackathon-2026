@@ -1,0 +1,135 @@
+# Макрофакторы (docs/03-data.md §5.2). d·σ > 0 → возможность (opportunity_text), иначе риск (risk_text).
+version: 1
+factors:
+  - id: key_rate
+    name: Ключевая ставка ЦБ
+    up_means: Ставка растёт или ожидания ужесточения денежно-кредитной политики
+    risk_text: дороже обслуживание кредитов и лизинга, дороже новое финансирование
+    opportunity_text: дешевле заёмные средства, проще рефинансировать долг; выше доходность депозитов
+    macro_indicator: key_rate
+  - id: credit_conditions
+    name: Условия кредитования
+    up_means: Банки ужесточают выдачу, растут надбавки и лимиты
+    risk_text: сложнее и дороже привлечь финансирование, жёстче ковенанты
+    opportunity_text: доступнее кредитные лимиты и рефинансирование
+    macro_indicator: null
+  - id: inflation
+    name: Инфляция
+    up_means: Инфляция ускоряется
+    risk_text: растут издержки и давление на маржу, дорожают закупки
+    opportunity_text: замедляется рост издержек, стабильнее цены закупок
+    macro_indicator: null
+  - id: fx_usd
+    name: Курс доллара
+    up_means: Доллар дорожает к рублю
+    risk_text: дорожают закупки и обязательства в долларах
+    opportunity_text: растёт рублёвая выручка от экспорта и валютных поступлений
+    macro_indicator: fx_usd
+  - id: fx_eur
+    name: Курс евро
+    up_means: Евро дорожает к рублю
+    risk_text: дорожают закупки и обязательства в евро
+    opportunity_text: растёт рублёвая выручка от поступлений в евро
+    macro_indicator: fx_eur
+  - id: fx_cny
+    name: Курс юаня
+    up_means: Юань дорожает к рублю
+    risk_text: дорожает импорт из Китая и расчёты в юанях
+    opportunity_text: растёт рублёвая выручка от поступлений в юанях
+    macro_indicator: fx_cny
+  - id: fx_try
+    name: Курс лиры
+    up_means: Лира дорожает к рублю
+    risk_text: дорожают закупки в Турции
+    opportunity_text: растёт рублёвая выручка от поступлений в лирах
+    macro_indicator: fx_try
+  - id: fx_aed
+    name: Курс дирхама
+    up_means: Дирхам дорожает к рублю
+    risk_text: дорожают расчёты через ОАЭ
+    opportunity_text: растёт рублёвая выручка от поступлений в дирхамах
+    macro_indicator: fx_aed
+  - id: fx_inr
+    name: Курс рупии
+    up_means: Рупия дорожает к рублю
+    risk_text: дорожают закупки в Индии
+    opportunity_text: растёт рублёвая выручка от поступлений в рупиях
+    macro_indicator: fx_inr
+  - id: fx_kzt
+    name: Курс тенге
+    up_means: Тенге дорожает к рублю
+    risk_text: дорожают закупки в Казахстане
+    opportunity_text: растёт рублёвая выручка от поступлений в тенге
+    macro_indicator: fx_kzt
+  - id: sanctions
+    name: Санкционное давление
+    up_means: Новые ограничения, вторичные санкции
+    risk_text: риск блокировки поставок и платежей, рост издержек на обход ограничений
+    opportunity_text: смягчение ограничений упрощает поставки и расчёты
+    macro_indicator: null
+  - id: cross_border_payments
+    name: Международные платежи
+    up_means: "Платежи за рубеж затрудняются: отказы банков, комиссии, сроки"
+    risk_text: задержки и удорожание расчётов с зарубежными контрагентами
+    opportunity_text: расчёты с зарубежными контрагентами быстрее и дешевле
+    macro_indicator: null
+  - id: customs_tariffs
+    name: Пошлины и сборы на ввоз и вывоз
+    up_means: Пошлины, утильсбор, квоты и барьеры растут
+    risk_text: дорожает импорт или экспорт, падает конкурентоспособность поставок
+    opportunity_text: защита внутреннего рынка от импорта, дешевле ввоз при снижении пошлин
+    macro_indicator: null
+  - id: logistics
+    name: Логистика
+    up_means: Перевозки дорожают или затрудняются
+    risk_text: растут транспортные расходы и сроки поставок
+    opportunity_text: дешевле и быстрее доставка
+    macro_indicator: null
+  - id: tax_burden
+    name: Налоговая нагрузка
+    up_means: Налоги и сборы растут
+    risk_text: снижается чистая прибыль, растут платежи в бюджет
+    opportunity_text: снижается налоговая нагрузка
+    macro_indicator: null
+  - id: gov_spending
+    name: Госрасходы и госзаказ
+    up_means: Госрасходы и госзаказ растут
+    risk_text: сокращаются госзаказы и бюджетное финансирование проектов
+    opportunity_text: больше госзаказов и бюджетных проектов
+    macro_indicator: null
+  - id: consumer_demand
+    name: Потребительский спрос
+    up_means: Спрос растёт
+    risk_text: снижаются продажи конечным потребителям
+    opportunity_text: растут продажи конечным потребителям
+    macro_indicator: null
+  - id: mortgage_market
+    name: Ипотека
+    up_means: Условия ипотеки улучшаются, программы расширяются
+    risk_text: падает спрос на жильё и связанные товары
+    opportunity_text: растёт спрос на жильё и связанные товары
+    macro_indicator: null
+  - id: energy_prices
+    name: Тарифы на энергию
+    up_means: Тарифы на электроэнергию и газ растут
+    risk_text: растут расходы на электроэнергию и газ
+    opportunity_text: снижаются расходы на энергию
+    macro_indicator: null
+  - id: oil_prices
+    name: Нефть
+    up_means: Цены на нефть растут
+    risk_text: дорожает топливо и нефтехимическое сырьё
+    opportunity_text: растут доходы от нефти и нефтепродуктов
+    macro_indicator: null
+  - id: labor_costs
+    name: Рынок труда
+    up_means: Дефицит кадров, рост зарплат
+    risk_text: растут расходы на персонал и сложнее нанимать
+    opportunity_text: проще нанимать, медленнее растут зарплаты
+    macro_indicator: null
+  - id: payment_discipline
+    name: Платёжная дисциплина
+    up_means: Растут неплатежи и просрочка в экономике
+    risk_text: растёт риск неплатежей покупателей и дебиторской задолженности
+    opportunity_text: покупатели платят быстрее, снижается дебиторка
+    macro_indicator: null

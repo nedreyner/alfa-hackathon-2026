@@ -1,0 +1,26 @@
+# Типы событий (docs/03-data.md §5.4). default_factors — подсказка для промпта разметки.
+version: 1
+event_types:
+  - {id: monetary_policy, name: Решения и сигналы ЦБ по ставке, default_factors: [key_rate, credit_conditions]}
+  - {id: fx_market, name: Валютный рынок и курсы, default_factors: [fx_usd, fx_cny, fx_eur]}
+  - {id: inflation_data, name: Данные по инфляции, default_factors: [inflation, key_rate]}
+  - {id: tariffs_customs, name: Пошлины, утильсбор и таможенные меры, default_factors: [customs_tariffs]}
+  - {id: sanctions, name: Санкции и ограничения, default_factors: [sanctions, cross_border_payments]}
+  - {id: tax_change, name: Изменения налогов и сборов, default_factors: [tax_burden]}
+  - {id: regulation, name: Регулирование и требования, default_factors: []}
+  - {id: government_support, name: Господдержка, субсидии и льготы, default_factors: [gov_spending]}
+  - {id: government_procurement, name: Госзаказ и бюджетные проекты, default_factors: [gov_spending]}
+  - {id: commodity_prices, name: Цены на сырьё и товары, default_factors: [oil_prices, inflation]}
+  - {id: supply_disruption, name: Перебои и дефицит поставок, default_factors: [logistics]}
+  - {id: logistics, name: Логистика и перевозки, default_factors: [logistics]}
+  - {id: demand_shift, name: Изменение спроса, default_factors: [consumer_demand]}
+  - {id: industry_statistics, name: Отраслевая статистика, default_factors: []}
+  - {id: corporate_event, name: "Корпоративные события: M&A, банкротства, смена собственников", default_factors: [payment_discipline]}
+  - {id: credit_market, name: Кредитный рынок, default_factors: [credit_conditions, key_rate]}
+  - {id: real_estate_market, name: Рынок недвижимости и ипотека, default_factors: [mortgage_market]}
+  - {id: energy_market, name: Энергетика и тарифы, default_factors: [energy_prices]}
+  - {id: labor_market, name: Рынок труда, default_factors: [labor_costs]}
+  - {id: trade_policy, name: "Экспорт и импорт: квоты, запреты", default_factors: [customs_tariffs, logistics]}
+  - {id: geopolitics, name: Геополитика, default_factors: [sanctions]}
+  - {id: natural_disaster, name: Природные явления и аварии, default_factors: [logistics]}
+  - {id: other, name: Прочее, default_factors: []}

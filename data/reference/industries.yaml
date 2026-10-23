@@ -1,0 +1,312 @@
+# Таксономия отраслей (docs/03-data.md §5.1). Сопоставление ОКВЭД — по самому длинному префиксу.
+# factor_sensitivity: factor_id: [вес 0..1, знак -1|1]; типовые доли нормируются кодом до суммы 1.
+version: 1
+industries:
+  - id: agriculture
+    name: "Сельское хозяйство, лес, рыболовство"
+    okved_prefixes: ["01", "02", "03"]
+    factor_sensitivity: {energy_prices: [0.3, -1], logistics: [0.4, -1], fx_usd: [0.3, 1], labor_costs: [0.3, -1]}
+    typical_suppliers: {chemicals: 0.3, wholesale_fuel: 0.2, wholesale_tech_equipment: 0.2, machinery: 0.15, wholesale_chemicals: 0.15}
+    typical_buyers: {food_production: 0.5, wholesale_agri_food: 0.4, retail: 0.1}
+    keywords: ["зерно", "пшеница", "урожай", "агрохолдинг", "удобрение", "скот", "рыба"]
+  - id: food_production
+    name: "Пищевая промышленность и напитки"
+    okved_prefixes: ["10", "11", "12"]
+    factor_sensitivity: {consumer_demand: [0.6, 1], energy_prices: [0.3, -1], inflation: [0.3, -1]}
+    typical_suppliers: {agriculture: 0.5, wholesale_agri_food: 0.2, plastics_rubber: 0.1, wood_paper: 0.1, transport_logistics: 0.1}
+    typical_buyers: {retail: 0.5, wholesale_agri_food: 0.35, hospitality: 0.15}
+    keywords: ["молоко", "мясо", "сахар", "хлеб", "напиток", "кондитерский", "пищевой"]
+  - id: oil_gas
+    name: "Добыча нефти и газа"
+    okved_prefixes: ["06", "09.1"]
+    factor_sensitivity: {oil_prices: [0.9, 1], sanctions: [0.6, -1], fx_usd: [0.6, 1], tax_burden: [0.5, -1]}
+    typical_suppliers: {machinery: 0.3, construction_infrastructure: 0.2, business_services: 0.2, metal_products: 0.15, transport_logistics: 0.15}
+    typical_buyers: {oil_refining: 0.6, power_utilities: 0.2, wholesale_fuel: 0.2}
+    keywords: ["нефть", "газ", "добыча", "скважина", "месторождение", "ОПЕК"]
+  - id: coal
+    name: "Добыча угля"
+    okved_prefixes: ["05"]
+    factor_sensitivity: {fx_usd: [0.5, 1], logistics: [0.6, -1], sanctions: [0.5, -1]}
+    typical_suppliers: {machinery: 0.4, transport_logistics: 0.3, wholesale_fuel: 0.3}
+    typical_buyers: {power_utilities: 0.5, metallurgy: 0.4, wholesale_other: 0.1}
+    keywords: ["уголь", "угольный", "разрез", "шахта"]
+  - id: mining_metal_ores
+    name: "Добыча руд и прочих полезных ископаемых"
+    okved_prefixes: ["07", "08", "09.9"]
+    factor_sensitivity: {fx_usd: [0.4, 1], energy_prices: [0.3, -1]}
+    typical_suppliers: {machinery: 0.4, wholesale_fuel: 0.2, chemicals: 0.2, transport_logistics: 0.2}
+    typical_buyers: {metallurgy: 0.7, building_materials: 0.3}
+    keywords: ["руда", "рудник", "ГОК", "щебень", "золото", "песок"]
+  - id: oil_refining
+    name: "Нефтепереработка"
+    okved_prefixes: ["19"]
+    factor_sensitivity: {oil_prices: [0.6, -1], tax_burden: [0.5, -1]}
+    typical_suppliers: {oil_gas: 0.8, chemicals: 0.1, machinery: 0.1}
+    typical_buyers: {wholesale_fuel: 0.6, transport_logistics: 0.2, chemicals: 0.2}
+    keywords: ["бензин", "дизель", "НПЗ", "нефтепродукт", "демпфер"]
+  - id: power_utilities
+    name: "Электроэнергетика, газо- и теплоснабжение"
+    okved_prefixes: ["35"]
+    factor_sensitivity: {energy_prices: [0.6, 1], key_rate: [0.3, -1]}
+    typical_suppliers: {oil_gas: 0.3, coal: 0.2, machinery: 0.2, electrical_equipment: 0.2, construction_infrastructure: 0.1}
+    typical_buyers: {metallurgy: 0.25, real_estate: 0.25, public_social: 0.2, chemicals: 0.15, retail: 0.15}
+    keywords: ["электроэнергия", "тариф", "ТЭЦ", "энергосбыт", "теплоснабжение"]
+  - id: water_waste
+    name: "Водоснабжение, отходы"
+    okved_prefixes: ["36", "37", "38", "39"]
+    factor_sensitivity: {tax_burden: [0.3, -1]}
+    typical_suppliers: {machinery: 0.4, power_utilities: 0.3, chemicals: 0.3}
+    typical_buyers: {real_estate: 0.4, public_social: 0.3, metallurgy: 0.3}
+    keywords: ["водоканал", "отходы", "ТКО", "утилизация"]
+  - id: textile_apparel
+    name: "Текстиль, одежда, кожа"
+    okved_prefixes: ["13", "14", "15"]
+    factor_sensitivity: {fx_cny: [0.5, -1], consumer_demand: [0.5, 1]}
+    typical_suppliers: {wholesale_other: 0.4, chemicals: 0.3, agriculture: 0.3}
+    typical_buyers: {retail: 0.6, wholesale_consumer_goods: 0.4}
+    keywords: ["ткань", "одежда", "текстиль", "обувь", "швейный"]
+  - id: wood_paper
+    name: "Дерево, бумага, полиграфия"
+    okved_prefixes: ["16", "17", "18"]
+    factor_sensitivity: {fx_usd: [0.4, 1], logistics: [0.5, -1], sanctions: [0.4, -1]}
+    typical_suppliers: {agriculture: 0.4, chemicals: 0.3, power_utilities: 0.3}
+    typical_buyers: {construction_buildings: 0.3, wholesale_construction_materials: 0.3, food_production: 0.2, retail: 0.2}
+    keywords: ["древесина", "пиломатериал", "фанера", "бумага", "целлюлоза", "картон"]
+  - id: chemicals
+    name: "Химия, удобрения, нефтехимия"
+    okved_prefixes: ["20"]
+    factor_sensitivity: {energy_prices: [0.6, -1], fx_usd: [0.4, 1], sanctions: [0.4, -1], logistics: [0.4, -1]}
+    typical_suppliers: {oil_gas: 0.4, oil_refining: 0.3, power_utilities: 0.2, mining_metal_ores: 0.1}
+    typical_buyers: {agriculture: 0.3, plastics_rubber: 0.3, wholesale_chemicals: 0.2, construction_specialized: 0.2}
+    keywords: ["удобрение", "аммиак", "карбамид", "полимер", "нефтехимия"]
+  - id: pharma
+    name: "Фармацевтика"
+    okved_prefixes: ["21"]
+    factor_sensitivity: {fx_inr: [0.4, -1], fx_cny: [0.4, -1], fx_eur: [0.3, -1]}
+    typical_suppliers: {chemicals: 0.4, wholesale_chemicals: 0.3, plastics_rubber: 0.3}
+    typical_buyers: {wholesale_consumer_goods: 0.6, public_social: 0.4}
+    keywords: ["лекарство", "препарат", "фармацевтический", "субстанция", "маркировка"]
+  - id: plastics_rubber
+    name: "Резина и пластмассы"
+    okved_prefixes: ["22"]
+    factor_sensitivity: {oil_prices: [0.4, -1], fx_cny: [0.3, -1]}
+    typical_suppliers: {chemicals: 0.7, oil_refining: 0.3}
+    typical_buyers: {food_production: 0.3, construction_specialized: 0.3, automotive_manufacturing: 0.2, retail: 0.2}
+    keywords: ["пластик", "упаковка", "шина", "резина", "ПЭТ"]
+  - id: building_materials
+    name: "Стройматериалы: цемент, бетон, стекло, кирпич"
+    okved_prefixes: ["23"]
+    factor_sensitivity: {energy_prices: [0.6, -1], mortgage_market: [0.5, 1], gov_spending: [0.4, 1], logistics: [0.4, -1]}
+    typical_suppliers: {mining_metal_ores: 0.4, power_utilities: 0.3, wholesale_fuel: 0.3}
+    typical_buyers: {construction_buildings: 0.5, wholesale_construction_materials: 0.3, construction_infrastructure: 0.2}
+    keywords: ["цемент", "бетон", "кирпич", "стекло", "ЖБИ"]
+  - id: metallurgy
+    name: "Металлургия"
+    okved_prefixes: ["24"]
+    factor_sensitivity: {fx_usd: [0.5, 1], energy_prices: [0.5, -1], sanctions: [0.5, -1], customs_tariffs: [0.4, -1], logistics: [0.4, -1]}
+    typical_suppliers: {mining_metal_ores: 0.4, coal: 0.3, power_utilities: 0.2, transport_logistics: 0.1}
+    typical_buyers: {wholesale_metals: 0.35, construction_buildings: 0.2, metal_products: 0.2, machinery: 0.15, construction_infrastructure: 0.1}
+    keywords: ["сталь", "металл", "прокат", "арматура", "металлург", "чугун", "алюминий", "медь"]
+  - id: metal_products
+    name: "Металлоизделия и металлоконструкции"
+    okved_prefixes: ["25"]
+    factor_sensitivity: {gov_spending: [0.4, 1]}
+    typical_suppliers: {metallurgy: 0.6, wholesale_metals: 0.4}
+    typical_buyers: {construction_buildings: 0.3, machinery: 0.3, construction_infrastructure: 0.2, wholesale_construction_materials: 0.2}
+    keywords: ["металлоконструкция", "метизы", "изделие"]
+  - id: electronics
+    name: "Электроника, компьютеры, оптика"
+    okved_prefixes: ["26"]
+    factor_sensitivity: {fx_cny: [0.7, -1], sanctions: [0.6, -1], customs_tariffs: [0.4, -1]}
+    typical_suppliers: {wholesale_tech_equipment: 0.5, plastics_rubber: 0.3, chemicals: 0.2}
+    typical_buyers: {it_telecom: 0.4, wholesale_tech_equipment: 0.3, public_social: 0.3}
+    keywords: ["электроника", "микросхема", "чип", "сервер", "смартфон"]
+  - id: electrical_equipment
+    name: "Электрооборудование"
+    okved_prefixes: ["27"]
+    factor_sensitivity: {fx_cny: [0.5, -1], gov_spending: [0.4, 1]}
+    typical_suppliers: {metallurgy: 0.4, wholesale_metals: 0.3, electronics: 0.3}
+    typical_buyers: {construction_specialized: 0.3, power_utilities: 0.3, machinery: 0.2, wholesale_tech_equipment: 0.2}
+    keywords: ["кабель", "трансформатор", "электрооборудование", "двигатель"]
+  - id: machinery
+    name: "Машиностроение, ремонт и монтаж оборудования"
+    okved_prefixes: ["28", "33"]
+    factor_sensitivity: {fx_cny: [0.5, -1], sanctions: [0.5, -1], key_rate: [0.4, -1], gov_spending: [0.4, 1]}
+    typical_suppliers: {metallurgy: 0.4, metal_products: 0.3, electrical_equipment: 0.2, wholesale_tech_equipment: 0.1}
+    typical_buyers: {oil_gas: 0.2, agriculture: 0.2, construction_infrastructure: 0.2, mining_metal_ores: 0.2, wholesale_tech_equipment: 0.2}
+    keywords: ["станок", "оборудование", "машиностроение", "спецтехника", "комбайн"]
+  - id: automotive_manufacturing
+    name: "Автопром"
+    okved_prefixes: ["29"]
+    factor_sensitivity: {consumer_demand: [0.6, 1], key_rate: [0.5, -1], fx_cny: [0.5, -1], customs_tariffs: [0.4, 1]}
+    typical_suppliers: {metallurgy: 0.3, wholesale_tech_equipment: 0.3, plastics_rubber: 0.2, electrical_equipment: 0.2}
+    typical_buyers: {auto_trade: 0.7, transport_logistics: 0.2, public_social: 0.1}
+    keywords: ["автомобиль", "автопром", "автозавод", "грузовик", "утильсбор"]
+  - id: other_transport_equipment
+    name: "Вагоны, суда, авиатехника"
+    okved_prefixes: ["30"]
+    factor_sensitivity: {gov_spending: [0.6, 1], sanctions: [0.5, -1]}
+    typical_suppliers: {metallurgy: 0.4, electrical_equipment: 0.3, machinery: 0.3}
+    typical_buyers: {transport_logistics: 0.7, public_social: 0.3}
+    keywords: ["вагон", "локомотив", "судно", "самолёт", "верфь"]
+  - id: furniture_other_manufacturing
+    name: "Мебель и прочие изделия"
+    okved_prefixes: ["31", "32"]
+    factor_sensitivity: {consumer_demand: [0.5, 1], mortgage_market: [0.3, 1]}
+    typical_suppliers: {wood_paper: 0.5, plastics_rubber: 0.2, metal_products: 0.2, textile_apparel: 0.1}
+    typical_buyers: {retail: 0.6, wholesale_consumer_goods: 0.4}
+    keywords: ["мебель", "игрушки", "ювелирный"]
+  - id: construction_buildings
+    name: "Строительство зданий, девелопмент"
+    okved_prefixes: ["41"]
+    factor_sensitivity: {mortgage_market: [0.9, 1], key_rate: [0.7, -1], credit_conditions: [0.5, -1], labor_costs: [0.5, -1], gov_spending: [0.3, 1]}
+    typical_suppliers: {building_materials: 0.3, wholesale_construction_materials: 0.25, construction_specialized: 0.2, wholesale_metals: 0.15, electrical_equipment: 0.1}
+    typical_buyers: {real_estate: 0.5, finance_insurance: 0.3, public_social: 0.2}
+    keywords: ["застройщик", "новостройка", "жильё", "ипотека", "эскроу", "девелопер", "ДДУ"]
+  - id: construction_infrastructure
+    name: "Инфраструктурное строительство"
+    okved_prefixes: ["42"]
+    factor_sensitivity: {gov_spending: [0.9, 1], key_rate: [0.4, -1], labor_costs: [0.4, -1]}
+    typical_suppliers: {building_materials: 0.3, wholesale_metals: 0.2, machinery: 0.2, construction_specialized: 0.2, wholesale_fuel: 0.1}
+    typical_buyers: {public_social: 0.6, oil_gas: 0.2, power_utilities: 0.2}
+    keywords: ["дорога", "мост", "трасса", "инфраструктура", "госконтракт", "нацпроект"]
+  - id: construction_specialized
+    name: "Специализированные строительные работы"
+    okved_prefixes: ["43"]
+    factor_sensitivity: {gov_spending: [0.4, 1], mortgage_market: [0.4, 1], labor_costs: [0.5, -1]}
+    typical_suppliers: {wholesale_construction_materials: 0.4, building_materials: 0.3, electrical_equipment: 0.3}
+    typical_buyers: {construction_buildings: 0.6, construction_infrastructure: 0.4}
+    keywords: ["монтаж", "отделка", "подряд", "субподряд", "электромонтаж"]
+  - id: real_estate
+    name: "Операции с недвижимостью"
+    okved_prefixes: ["68"]
+    factor_sensitivity: {key_rate: [0.6, -1], mortgage_market: [0.5, 1], consumer_demand: [0.3, 1]}
+    typical_suppliers: {construction_buildings: 0.5, business_services: 0.3, power_utilities: 0.2}
+    typical_buyers: {retail: 0.4, business_services: 0.3, it_telecom: 0.3}
+    keywords: ["недвижимость", "аренда", "торговый центр", "склад", "офис"]
+  - id: auto_trade
+    name: "Торговля автомобилями, запчастями, автосервис"
+    okved_prefixes: ["45"]
+    factor_sensitivity: {customs_tariffs: [0.8, -1], fx_cny: [0.6, -1], key_rate: [0.6, -1], consumer_demand: [0.6, 1], credit_conditions: [0.5, -1]}
+    typical_suppliers: {automotive_manufacturing: 0.5, wholesale_tech_equipment: 0.2, transport_logistics: 0.15, finance_insurance: 0.15}
+    typical_buyers: {finance_insurance: 0.4, transport_logistics: 0.2, business_services: 0.2, retail: 0.2}
+    keywords: ["автомобиль", "дилер", "автосалон", "утильсбор", "автокредит", "запчасть"]
+  - id: wholesale_agri_food
+    name: "Опт: сельхозсырьё и продукты питания"
+    okved_prefixes: ["46.2", "46.3"]
+    factor_sensitivity: {logistics: [0.5, -1], consumer_demand: [0.4, 1], customs_tariffs: [0.4, -1], fx_cny: [0.3, -1]}
+    typical_suppliers: {agriculture: 0.5, food_production: 0.4, transport_logistics: 0.1}
+    typical_buyers: {retail: 0.5, food_production: 0.3, hospitality: 0.2}
+    keywords: ["зерно", "продукты", "мясо", "сахар", "экспорт зерна", "пошлина"]
+  - id: wholesale_consumer_goods
+    name: "Опт: непродовольственные потребтовары (в т. ч. фарма 46.46)"
+    okved_prefixes: ["46.4"]
+    factor_sensitivity: {consumer_demand: [0.7, 1], fx_cny: [0.5, -1], customs_tariffs: [0.4, -1], logistics: [0.4, -1]}
+    typical_suppliers: {pharma: 0.3, textile_apparel: 0.2, furniture_other_manufacturing: 0.2, wholesale_other: 0.2, electronics: 0.1}
+    typical_buyers: {retail: 0.8, public_social: 0.2}
+    keywords: ["бытовая техника", "одежда", "косметика", "аптечный", "дистрибуция"]
+  - id: wholesale_tech_equipment
+    name: "Опт: ИКТ, машины и оборудование"
+    okved_prefixes: ["46.5", "46.6"]
+    factor_sensitivity: {fx_cny: [0.8, -1], sanctions: [0.6, -1], cross_border_payments: [0.5, -1], customs_tariffs: [0.4, -1]}
+    typical_suppliers: {machinery: 0.4, electronics: 0.3, electrical_equipment: 0.3}
+    typical_buyers: {public_social: 0.2, business_services: 0.2, it_telecom: 0.2, construction_infrastructure: 0.1, construction_buildings: 0.1, agriculture: 0.1, mining_metal_ores: 0.1}
+    keywords: ["оборудование", "спецтехника", "поставка", "импорт", "станок", "сервер"]
+  - id: wholesale_fuel
+    name: "Опт: топливо"
+    okved_prefixes: ["46.71"]
+    factor_sensitivity: {oil_prices: [0.6, 1], tax_burden: [0.5, -1], logistics: [0.4, -1]}
+    typical_suppliers: {oil_refining: 0.8, transport_logistics: 0.2}
+    typical_buyers: {transport_logistics: 0.4, agriculture: 0.2, retail: 0.2, construction_infrastructure: 0.2}
+    keywords: ["топливо", "бензин", "дизель", "биржа", "АЗС", "запрет экспорта"]
+  - id: wholesale_metals
+    name: "Опт: металлы и руды"
+    okved_prefixes: ["46.72"]
+    factor_sensitivity: {customs_tariffs: [0.5, -1], key_rate: [0.5, -1], fx_cny: [0.4, -1], gov_spending: [0.3, 1], mortgage_market: [0.3, 1]}
+    typical_suppliers: {metallurgy: 0.8, metal_products: 0.1, transport_logistics: 0.1}
+    typical_buyers: {construction_buildings: 0.35, metal_products: 0.2, machinery: 0.2, construction_infrastructure: 0.15, construction_specialized: 0.1}
+    keywords: ["металлопрокат", "арматура", "сталь", "металлобаза", "лист", "труба"]
+  - id: wholesale_construction_materials
+    name: "Опт: стройматериалы, лесоматериалы, сантехника"
+    okved_prefixes: ["46.73", "46.74"]
+    factor_sensitivity: {mortgage_market: [0.6, 1], key_rate: [0.5, -1], gov_spending: [0.3, 1]}
+    typical_suppliers: {building_materials: 0.5, wood_paper: 0.3, metal_products: 0.2}
+    typical_buyers: {construction_buildings: 0.4, construction_specialized: 0.4, retail: 0.2}
+    keywords: ["стройматериалы", "цемент", "пиломатериал", "сантехника", "сухие смеси"]
+  - id: wholesale_chemicals
+    name: "Опт: химическая продукция и удобрения"
+    okved_prefixes: ["46.75"]
+    factor_sensitivity: {logistics: [0.4, -1], customs_tariffs: [0.3, -1], fx_usd: [0.3, -1]}
+    typical_suppliers: {chemicals: 0.8, transport_logistics: 0.2}
+    typical_buyers: {agriculture: 0.4, plastics_rubber: 0.3, construction_specialized: 0.3}
+    keywords: ["удобрения", "химикаты", "реагенты", "полимеры"]
+  - id: wholesale_other
+    name: "Прочий опт и торговые агенты"
+    okved_prefixes: ["46", "46.1", "46.76", "46.77", "46.9"]
+    factor_sensitivity: {consumer_demand: [0.3, 1], fx_cny: [0.3, -1]}
+    typical_suppliers: {food_production: 0.25, wholesale_consumer_goods: 0.25, textile_apparel: 0.2, electronics: 0.15, plastics_rubber: 0.15}
+    typical_buyers: {retail: 0.7, hospitality: 0.3}
+    keywords: ["опт", "дистрибьютор", "торговый дом", "поставка"]
+  - id: retail
+    name: "Розничная торговля"
+    okved_prefixes: ["47"]
+    factor_sensitivity: {consumer_demand: [0.9, 1], inflation: [0.4, -1], labor_costs: [0.4, -1], key_rate: [0.3, -1]}
+    typical_suppliers: {wholesale_agri_food: 0.3, wholesale_consumer_goods: 0.3, food_production: 0.2, wholesale_other: 0.2}
+    typical_buyers: {}
+    keywords: ["ритейл", "магазин", "розница", "торговая сеть", "маркетплейс"]
+  - id: transport_logistics
+    name: "Транспорт, склады, логистика"
+    okved_prefixes: ["49", "50", "51", "52", "53"]
+    factor_sensitivity: {oil_prices: [0.6, -1], logistics: [0.4, 1], sanctions: [0.3, -1]}
+    typical_suppliers: {wholesale_fuel: 0.4, auto_trade: 0.2, machinery: 0.2, other_transport_equipment: 0.2}
+    typical_buyers: {retail: 0.3, wholesale_other: 0.3, metallurgy: 0.2, oil_gas: 0.2}
+    keywords: ["перевозка", "логистика", "грузоперевозки", "РЖД", "фрахт", "контейнер", "порт"]
+  - id: hospitality
+    name: "Гостиницы и общепит"
+    okved_prefixes: ["55", "56"]
+    factor_sensitivity: {consumer_demand: [0.8, 1], labor_costs: [0.5, -1], inflation: [0.4, -1]}
+    typical_suppliers: {wholesale_agri_food: 0.5, food_production: 0.3, real_estate: 0.2}
+    typical_buyers: {}
+    keywords: ["ресторан", "гостиница", "отель", "общепит", "туризм"]
+  - id: it_telecom
+    name: "ИТ, связь, медиа"
+    okved_prefixes: ["58", "59", "60", "61", "62", "63"]
+    factor_sensitivity: {sanctions: [0.4, -1], fx_usd: [0.3, -1], tax_burden: [0.3, -1]}
+    typical_suppliers: {electronics: 0.4, wholesale_tech_equipment: 0.4, real_estate: 0.2}
+    typical_buyers: {finance_insurance: 0.3, public_social: 0.3, retail: 0.2, business_services: 0.2}
+    keywords: ["связь", "оператор", "ИТ", "софт", "интернет", "дата-центр"]
+  - id: finance_insurance
+    name: "Финансы, страхование, лизинговые компании"
+    okved_prefixes: ["64", "65", "66"]
+    factor_sensitivity: {key_rate: [0.5, -1], credit_conditions: [0.5, -1]}
+    typical_suppliers: {it_telecom: 0.4, business_services: 0.4, real_estate: 0.2}
+    typical_buyers: {}
+    keywords: ["банк", "лизинг", "страхование", "кредит"]
+  - id: business_services
+    name: "Профессиональные и административные услуги, аренда"
+    okved_prefixes: ["69", "70", "71", "72", "73", "74", "75", "77", "78", "79", "80", "81", "82"]
+    factor_sensitivity: {labor_costs: [0.5, -1], tax_burden: [0.3, -1]}
+    typical_suppliers: {real_estate: 0.4, it_telecom: 0.4, transport_logistics: 0.2}
+    typical_buyers: {finance_insurance: 0.2, it_telecom: 0.2, retail: 0.2, construction_buildings: 0.2, public_social: 0.2}
+    keywords: ["консалтинг", "аудит", "аренда техники", "клининг", "охрана"]
+  - id: public_social
+    name: "Госуправление, образование, здравоохранение, культура"
+    okved_prefixes: ["84", "85", "86", "87", "88", "89", "90", "91", "92", "93"]
+    factor_sensitivity: {gov_spending: [0.8, 1]}
+    typical_suppliers: {business_services: 0.3, construction_infrastructure: 0.3, pharma: 0.2, wholesale_consumer_goods: 0.2}
+    typical_buyers: {}
+    keywords: ["бюджет", "госзакупки", "больница", "школа", "министерство"]
+  - id: other_services
+    name: "Прочие услуги"
+    okved_prefixes: ["94", "95", "96", "97", "98", "99"]
+    factor_sensitivity: {consumer_demand: [0.5, 1]}
+    typical_suppliers: {business_services: 0.5, real_estate: 0.5}
+    typical_buyers: {}
+    keywords: ["услуги", "ремонт", "бытовые"]
+  - id: unknown
+    name: "Не определено"
+    okved_prefixes: []
+    factor_sensitivity: {}
+    typical_suppliers: {}
+    typical_buyers: {}
+    keywords: []

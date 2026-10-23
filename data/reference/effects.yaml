@@ -1,0 +1,147 @@
+# Эффекты события на отрасль и матрица «канал × эффект» (docs/03-data.md §5.3, docs/07-ranking.md §3).
+version: 1
+effects:
+- id: prices_up
+  meaning: Цены на продукцию отрасли растут
+- id: prices_down
+  meaning: Цены на продукцию отрасли снижаются
+- id: demand_up
+  meaning: Спрос на продукцию отрасли растёт
+- id: demand_down
+  meaning: Спрос на продукцию отрасли падает
+- id: supply_down
+  meaning: 'Выпуск или поставки отрасли сокращаются: запреты, аварии, дефицит'
+- id: supply_up
+  meaning: Выпуск или предложение отрасли растёт
+- id: costs_up
+  meaning: 'Издержки отрасли растут: налоги, сборы, сырьё, тарифы'
+- id: costs_down
+  meaning: Издержки отрасли снижаются
+- id: regulation_tighter
+  meaning: 'Регулирование ужесточается: требования, запреты, проверки'
+- id: support_measures
+  meaning: 'Господдержка: субсидии, льготы, госзаказ'
+matrix:
+  own:
+    prices_up:
+      direction: opportunity
+      strength: 1.0
+      mechanism: рост цен реализации
+    prices_down:
+      direction: risk
+      strength: 1.0
+      mechanism: давление на цены и маржу
+    demand_up:
+      direction: opportunity
+      strength: 1.0
+      mechanism: рост спроса на вашу продукцию
+    demand_down:
+      direction: risk
+      strength: 1.0
+      mechanism: снижение спроса
+    supply_down:
+      direction: mixed
+      strength: 0.6
+      mechanism: 'дефицит на рынке: выше цены, но риск недопоставок'
+    supply_up:
+      direction: risk
+      strength: 0.6
+      mechanism: больше конкуренции → давление на цены
+    costs_up:
+      direction: risk
+      strength: 1.0
+      mechanism: рост издержек отрасли
+    costs_down:
+      direction: opportunity
+      strength: 1.0
+      mechanism: снижение издержек отрасли
+    regulation_tighter:
+      direction: risk
+      strength: 1.0
+      mechanism: новые ограничения и затраты на соответствие
+    support_measures:
+      direction: opportunity
+      strength: 1.0
+      mechanism: доступ к мерам господдержки
+  supply:
+    prices_up:
+      direction: risk
+      strength: 1.0
+      mechanism: рост закупочных цен → себестоимость
+    prices_down:
+      direction: opportunity
+      strength: 1.0
+      mechanism: закупки дешевеют → маржа
+    demand_up:
+      direction: risk
+      strength: 0.4
+      mechanism: конкуренция за поставки → рост цен и сроков
+    demand_down:
+      direction: opportunity
+      strength: 0.4
+      mechanism: 'поставщики сговорчивее: скидки, отсрочки'
+    supply_down:
+      direction: risk
+      strength: 1.0
+      mechanism: перебои и дефицит поставок
+    supply_up:
+      direction: opportunity
+      strength: 0.6
+      mechanism: больше предложения → лучше условия закупок
+    costs_up:
+      direction: risk
+      strength: 0.6
+      mechanism: поставщики переложат издержки в цены
+    costs_down:
+      direction: opportunity
+      strength: 0.6
+      mechanism: пространство для снижения закупочных цен
+    regulation_tighter:
+      direction: risk
+      strength: 0.6
+      mechanism: риск сбоев у поставщиков
+    support_measures:
+      direction: opportunity
+      strength: 0.3
+      mechanism: поставщики стабильнее
+  demand:
+    prices_up:
+      direction: opportunity
+      strength: 0.5
+      mechanism: у покупателей растёт выручка → платёжеспособность
+    prices_down:
+      direction: risk
+      strength: 0.5
+      mechanism: у покупателей падают цены → давление на ваши цены и сроки оплаты
+    demand_up:
+      direction: opportunity
+      strength: 1.0
+      mechanism: покупатели нарастят закупки
+    demand_down:
+      direction: risk
+      strength: 1.0
+      mechanism: покупатели сократят закупки, вырастет дебиторка
+    supply_down:
+      direction: risk
+      strength: 0.6
+      mechanism: покупатели сокращают выпуск → меньше заказов
+    supply_up:
+      direction: opportunity
+      strength: 0.4
+      mechanism: покупатели наращивают выпуск → больше заказов
+    costs_up:
+      direction: risk
+      strength: 0.5
+      mechanism: у покупателей растут издержки → давление на ваши цены и отсрочки
+    costs_down:
+      direction: opportunity
+      strength: 0.4
+      mechanism: у покупателей освобождаются средства
+    regulation_tighter:
+      direction: risk
+      strength: 0.5
+      mechanism: ограничения у покупателей → меньше заказов
+    support_measures:
+      direction: opportunity
+      strength: 0.6
+      mechanism: господдержка покупателей → больше заказов
