@@ -1,0 +1,36 @@
+# Модели шлюза и цепочки по задачам (docs/04-llm.md §2.1).
+# id — точные имена из GET /models шлюза. capabilities и token_param уточняет `alfa llm probe --write-config`.
+# Цены null → default_price_rub_per_1m (консервативная оценка до вызова). Фактическую стоимость шлюз
+# возвращает в usage.cost (₽), она и идёт в учёт бюджета.
+version: 1
+gateway:
+  timeout_s: 60
+  connect_timeout_s: 10
+  max_concurrency_interactive: 4
+  max_concurrency_background: 2
+  retries: 2
+  retry_delays_s: [1.0, 3.0]
+  token_param: max_tokens
+default_price_rub_per_1m: {input: 50, output: 200}
+models:
+  gemma:     {id: "google/gemma-4-26b-a4b-it",      family: gemma,    context_tokens: 128000,  price_rub_per_1m: {input: null, output: null},
+              capabilities: {tools: true, json_schema: null, json_object: null, vision: false, usage: true}}
+  qwen_text: {id: "qwen/qwen3.6-35b-a3b",           family: qwen,     context_tokens: 262144,  price_rub_per_1m: {input: null, output: null}, capabilities: {}}
+  deepseek:  {id: "deepseek/deepseek-v4.1-flash",   family: deepseek, context_tokens: 1048576, price_rub_per_1m: {input: null, output: null}, capabilities: {}}
+  glm:       {id: "z-ai/glm-5.3-flash",             family: glm,      context_tokens: 128000,  price_rub_per_1m: {input: null, output: null}, capabilities: {}}
+  kimi:      {id: "moonshotai/kimi-k2.6",           family: kimi,     context_tokens: 262144,  price_rub_per_1m: {input: null, output: null}, capabilities: {}}
+  qwen_vl:   {id: "qwen/qwen3-vl-30b-a3b-instruct", family: qwen,     context_tokens: 262144,  price_rub_per_1m: {input: null, output: null},
+              capabilities: {vision: true}}
+tasks:
+  tagging:             {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: background,  strategy: auto,        timeout_s: 30}
+  tagging_interactive: {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: interactive, strategy: auto,        timeout_s: 20}
+  research_extract:    {chain: [qwen_text, deepseek], temperature: 0,   max_tokens: 2000, priority: background,  strategy: auto,        timeout_s: 60}
+  vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 1500, priority: background,  strategy: json_object, timeout_s: 90}
+  rerank:              {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 800,  priority: precompute,  strategy: auto,        timeout_s: 30}
+  agent:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: interactive, strategy: tool_call,   timeout_s: 45}
+  draft:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: precompute,  strategy: auto,        timeout_s: 45}
+  revise:              {chain: [deepseek, kimi],      temperature: 0.1, max_tokens: 4000, priority: precompute,  strategy: auto,        timeout_s: 45}
+  verify:              {chain: [glm, qwen_text],      temperature: 0,   max_tokens: 2000, priority: precompute,  strategy: auto,        timeout_s: 40,
+                        exclude_drafter_family: true}
+  chat:                {chain: [kimi, deepseek],      temperature: 0.3, max_tokens: 1500, priority: interactive, strategy: tool_call,   timeout_s: 30,
+                        cache: false}

@@ -1099,6 +1099,8 @@ CREATE TABLE llm_calls (
 CREATE INDEX idx_llm_calls_day ON llm_calls(budget_day, priority);
 ```
 
+Миграция `0002_llm_calls_cache_key.sql` добавляет в `llm_calls` колонку `cache_key TEXT` и индекс по `run_id`: по ним `alfa llm cache export --runs` находит записи кеша прогона.
+
 ## 10. Проверка данных (`alfa data validate`)
 
 Пишет отчёт в stdout (таблица), в `data/runtime/data_quality.json` и в DuckDB `data_quality(check, value, status, details)`. Статусы: `ok`, `warn`, `error`. Код возврата ненулевой при хотя бы одном `error`.

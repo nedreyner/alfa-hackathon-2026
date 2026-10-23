@@ -49,7 +49,7 @@ def test_fts5_available() -> None:
 
 def test_migrate_twice_creates_all_tables(tmp_path: Path) -> None:
     db = SqliteDB(tmp_path / "app.sqlite")
-    assert db.migrate() == ["0001_init"]
+    assert db.migrate() == ["0001_init", "0002_llm_calls_cache_key"]
     assert db.migrate() == []
     names = {r[0] for r in db.query("SELECT name FROM sqlite_master WHERE type = 'table'")}
     assert names >= EXPECTED_TABLES | FTS_TABLES
