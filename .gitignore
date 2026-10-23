@@ -1,0 +1,29 @@
+# Данные и рабочие базы — никогда не коммитить
+data/raw/
+data/runtime/
+*.duckdb*
+*.sqlite*
+config/demo.real.yaml
+
+# Секреты
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Прочее
+.DS_Store
+.idea/
+.vscode/
