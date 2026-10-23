@@ -1,41 +1,132 @@
 # Страны ВЭД (docs/03-data.md §5.5). Строка ФНС нормализуется и сравнивается с names и iso2.
-version: 1
+version: 2
 countries:
-  - {iso2: CN, names: [китай, кнр, китайская народная республика], currencies: [CNY, USD], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: HK, names: [гонконг, сянган, гонконг (сянган), гонконг сар], currencies: [USD, CNY], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: TR, names: [турция, турецкая республика, республика турция], currencies: [TRY, USD, EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: AE, names: [оаэ, объединенные арабские эмираты], currencies: [AED, USD], payment_friction: medium, sanctions_scrutiny: high}
-  - {iso2: IN, names: [индия, республика индия], currencies: [INR, USD], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: KZ, names: [казахстан, республика казахстан], currencies: [KZT], payment_friction: low, sanctions_scrutiny: medium}
-  - {iso2: BY, names: [беларусь, белоруссия, республика беларусь], currencies: [], payment_friction: low, sanctions_scrutiny: low}
-  - {iso2: UZ, names: [узбекистан, республика узбекистан], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: KG, names: [киргизия, кыргызстан, киргизская республика], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: AM, names: [армения, республика армения], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: GE, names: [грузия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: AZ, names: [азербайджан, азербайджанская республика], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: IR, names: [иран, исламская республика иран], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: VN, names: [вьетнам, социалистическая республика вьетнам], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: TH, names: [таиланд, тайланд], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: MY, names: [малайзия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: ID, names: [индонезия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: KR, names: [корея, республика корея, южная корея, "корея, республика"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: JP, names: [япония], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: DE, names: [германия, фрг, федеративная республика германия], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: IT, names: [италия, итальянская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: FR, names: [франция, французская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: NL, names: [нидерланды, голландия], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: PL, names: [польша, республика польша], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: US, names: [сша, соединенные штаты, соединенные штаты америки], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: GB, names: [великобритания, соединенное королевство, англия], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: EG, names: [египет, арабская республика египет], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: SA, names: [саудовская аравия, королевство саудовская аравия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: BR, names: [бразилия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: RS, names: [сербия, республика сербия], currencies: [EUR], payment_friction: medium, sanctions_scrutiny: medium}
-  - {iso2: MN, names: [монголия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: LT, names: [литва, литовская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: LV, names: [латвия, латвийская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: EE, names: [эстония, эстонская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: FI, names: [финляндия], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
-  - {iso2: TJ, names: [таджикистан, республика таджикистан], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: TM, names: [туркмения, туркменистан], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
-  - {iso2: SG, names: [сингапур], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "CN", names: [китай, кнр, китайская народная республика], currencies: [CNY, USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "HK", names: [гонконг, сянган, гонконг (сянган), гонконг сар], currencies: [USD, CNY], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "TR", names: [турция, турецкая республика, республика турция], currencies: [TRY, USD, EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "AE", names: [оаэ, объединенные арабские эмираты], currencies: [AED, USD], payment_friction: medium, sanctions_scrutiny: high}
+  - {iso2: "IN", names: [индия, республика индия], currencies: [INR, USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "KZ", names: [казахстан, республика казахстан], currencies: [KZT], payment_friction: low, sanctions_scrutiny: medium}
+  - {iso2: "BY", names: [беларусь, белоруссия, республика беларусь], currencies: [], payment_friction: low, sanctions_scrutiny: low}
+  - {iso2: "UZ", names: [узбекистан, республика узбекистан], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "KG", names: [киргизия, кыргызстан, киргизская республика], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "AM", names: [армения, республика армения], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "GE", names: [грузия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "AZ", names: [азербайджан, азербайджанская республика], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "IR", names: [иран, исламская республика иран], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "VN", names: [вьетнам, социалистическая республика вьетнам], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "TH", names: [таиланд, тайланд], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MY", names: [малайзия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "ID", names: [индонезия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "KR", names: [корея, республика корея, южная корея, "корея, республика"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "JP", names: [япония], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "DE", names: [германия, фрг, федеративная республика германия], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "IT", names: [италия, итальянская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "FR", names: [франция, французская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "NL", names: [нидерланды, голландия], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "PL", names: [польша, республика польша], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "US", names: [сша, соединенные штаты, соединенные штаты америки], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "GB", names: [великобритания, соединенное королевство, англия], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "EG", names: [египет, арабская республика египет], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "SA", names: [саудовская аравия, королевство саудовская аравия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "BR", names: [бразилия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "RS", names: [сербия, республика сербия], currencies: [EUR], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "MN", names: [монголия], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "LT", names: [литва, литовская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "LV", names: [латвия, латвийская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "EE", names: [эстония, эстонская республика], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "FI", names: [финляндия], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "TJ", names: [таджикистан, республика таджикистан], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "TM", names: [туркмения, туркменистан], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "SG", names: [сингапур], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  # Добавлены по фактическим строкам ФНС в данных кейса
+  - {iso2: "CZ", names: ["чехия", "чешская республика"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "ES", names: ["испания"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "BE", names: ["бельгия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "AT", names: ["австрия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "GR", names: ["греция"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "DK", names: ["дания"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "BG", names: ["болгария"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "HU", names: ["венгрия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "CY", names: ["кипр"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "SI", names: ["словения"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "SK", names: ["словакия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "PT", names: ["португалия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "SE", names: ["швеция"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "HR", names: ["хорватия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "IE", names: ["ирландия"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "LU", names: ["люксембург"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "RO", names: ["румыния"], currencies: [EUR], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "TW", names: ["тайвань"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "CH", names: ["швейцария", "швейцарская конфедерация"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "CA", names: ["канада"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "NO", names: ["норвегия"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "AU", names: ["австралия"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "KP", names: ["северная корея", "кндр"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "KY", names: ["острова кайман"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "LI", names: ["лихтенштейн"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "SM", names: ["сан-марино"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "AD", names: ["андорра"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "MK", names: ["северная македония", "македония"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "IL", names: ["израиль"], currencies: [USD], payment_friction: high, sanctions_scrutiny: high}
+  - {iso2: "CL", names: ["чили"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MD", names: ["молдова", "молдавия", "республика молдова"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "PE", names: ["перу"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "OM", names: ["оман"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "IQ", names: ["ирак"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "TN", names: ["тунис"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MV", names: ["мальдивы"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "AR", names: ["аргентина"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "BD", names: ["бангладеш"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "DZ", names: ["алжир"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "UY", names: ["уругвай"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "LB", names: ["ливан"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "PK", names: ["пакистан"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "KE", names: ["кения"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "EC", names: ["эквадор"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MO", names: ["макао"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "AF", names: ["афганистан"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "QA", names: ["катар"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "BO", names: ["боливия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "GN", names: ["гвинея"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "JO", names: ["иордания"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "ZA", names: ["южная африка", "юар", "южно-африканская республика"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "KW", names: ["кувейт"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "BH", names: ["бахрейн"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "CO", names: ["колумбия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "LK", names: ["шри-ланка"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MM", names: ["мьянма"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "SC", names: ["сейшелы"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MA", names: ["марокко"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "LY", names: ["ливия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "MX", names: ["мексика"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "PH", names: ["филиппины"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "NP", names: ["непал"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "PY", names: ["парагвай"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "GH", names: ["гана"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "ET", names: ["эфиопия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "ML", names: ["мали"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "NG", names: ["нигерия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "TZ", names: ["танзания"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "CM", names: ["камерун"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "YE", names: ["йемен"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: medium}
+  - {iso2: "BF", names: ["буркина-фасо"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "CI", names: ["кот д'ивуар", "кот-д'ивуар"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "DJ", names: ["джибути"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "BA", names: ["босния и герцеговина"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "SN", names: ["сенегал"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "NA", names: ["намибия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "KH", names: ["камбоджа"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "PA", names: ["панама"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "GA", names: ["габон"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "LA", names: ["лаос"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "BT", names: ["бутан"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "CR", names: ["коста-рика"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "NE", names: ["нигер"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "CG", names: ["конго"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "UG", names: ["уганда"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "ZM", names: ["замбия"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "MH", names: ["маршалловы острова"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "RW", names: ["руанда"], currencies: [USD], payment_friction: medium, sanctions_scrutiny: low}
+  - {iso2: "XA", names: ["абхазия", "республика абхазия"], currencies: [], payment_friction: low, sanctions_scrutiny: low}
+  - {iso2: "XO", names: ["южная осетия", "республика южная осетия"], currencies: [], payment_friction: low, sanctions_scrutiny: low}

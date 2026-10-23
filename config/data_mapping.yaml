@@ -1,0 +1,57 @@
+# Профиль real: маппинг CSV кейса (df_*_hack.csv) на логическую схему (docs/03-data.md §3).
+# Сами файлы лежат в data/raw/ и в git не попадают.
+#   df_Uid_data_hack.csv    — компании: продукты и страна ВЭД (ФНС) в колонках (wide)
+#   df_Uid_payment_hack.csv — платежи PAYER → BENEFICIARY (режим payer_payee)
+# В данных нет названий и ИНН компаний: имя строится как «Компания <id>».
+profile: real
+target_revenue_rub: 15_000_000_000
+tables:
+  companies:
+    path: data/raw/df_Uid_data_hack.csv
+    csv: {delimiter: ";", encoding: auto, header: true, decimal: "."}
+    columns:
+      company_id: SYNTHETIC_U
+      inn: null
+      name: null
+      okved: MAINOKVED_CODE
+      okved_secondary: null
+      region_code: null
+      region_name: REGION
+      revenue_rub: REVENUE_COMPANY
+      employees: null
+      is_client: CL_TYPE
+      group_id: GROUP_ID
+    transforms:
+      # CLOSE_CLIENT — клиент с особым статусом обслуживания; PROSPECT — потенциальный клиент
+      is_client: {true_values: ["CLIENT", "CLOSE_CLIENT"]}
+  products:
+    mode: wide
+    source: companies
+    flags:
+      credit: CL_PRODUCT_LOA_MARK
+      leasing: CL_PRODUCT_LEA_MARK
+      deposit: CL_PRODUCT_DEP_MARK
+      guarantee: CL_PRODUCT_GAR_MARK
+      salary: CL_PRODUCT_ZPP_MARK
+      factoring: FACTORING_MARK
+    true_values: ["1", "1.0"]
+  ved:
+    mode: wide
+    source: companies
+    country_column: FTS_COUNTRY_NAME
+    direction_column: null
+    split: [",", ";"]
+  payments:
+    path: data/raw/df_Uid_payment_hack.csv
+    csv: {delimiter: ";", encoding: auto, header: true, decimal: "."}
+    mode: payer_payee
+    columns:
+      payer_id: PAYER
+      payee_id: BENEFICIARY
+      amount_rub: PAY_AMT
+      tx_count: PAY_CNT
+      period: null
+    counterparty_key: company_id
+    exclude_self: true
+    exclude_intragroup: true
+weight_basis: auto
