@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
@@ -12,13 +13,17 @@ import duckdb
 from alfa_insight.data.factors import compute_factors, exposure_level
 from alfa_insight.data.models import (
     CompanyProfile,
+    CompanySummary,
     Feature,
     IndustryShare,
     ProductInfo,
     RevenueBucket,
     VedEntry,
 )
+from alfa_insight.db.duck import DuckReader
+from alfa_insight.errors import NotFoundError
 from alfa_insight.reference.taxonomy import UNKNOWN, Taxonomy
+from alfa_insight.store.profiles import Override, ProfileOverridesRepo
 
 if TYPE_CHECKING:
     from alfa_insight.data.build import BuildContext
@@ -361,3 +366,135 @@ def build_profiles(conn: duckdb.DuckDBPyConnection, ctx: BuildContext) -> int:
     if factor_rows:
         conn.executemany("INSERT INTO company_factors VALUES (?, ?, ?, ?, ?)", factor_rows)
     return len(rows)
+
+
+# ── чтение профилей с правками ──
+class ProfileStore:
+    """Профили из DuckDB (только чтение) с наложенными правками из SQLite. Кеш в памяти процесса."""
+
+    def __init__(
+        self,
+        duck: DuckReader,
+        overrides: ProfileOverridesRepo,
+        taxonomy: Taxonomy,
+        demo_ids: list[str] | None = None,
+    ):
+        self.duck = duck
+        self.overrides = overrides
+        self.taxonomy = taxonomy
+        self.demo_ids = list(demo_ids or [])
+        self._cache: dict[str, CompanyProfile] = {}
+        self._base: dict[str, tuple[CompanyProfile, int]] = {}
+        self._lock = threading.Lock()
+
+    def _load_base(self, company_id: str) -> tuple[CompanyProfile, int]:
+        cached = self._base.get(company_id)
+        if cached is not None:
+            return cached
+        rows = self.duck.rows(
+            "SELECT profile_json, group_size FROM profiles WHERE company_id = ?", [company_id]
+        )
+        if not rows:
+            raise NotFoundError("Компания не найдена", {"company_id": company_id})
+        base = CompanyProfile.model_validate_json(rows[0]["profile_json"])
+        result = (base, int(rows[0]["group_size"] or 1))
+        self._base[company_id] = result
+        return result
+
+    def get(self, company_id: str) -> CompanyProfile:
+        with self._lock:
+            cached = self._cache.get(company_id)
+            if cached is not None:
+                return cached
+            base, group_size = self._load_base(company_id)
+            profile = self.apply_overrides(base, self.overrides.list(company_id), group_size=group_size)
+            self._cache[company_id] = profile
+            return profile
+
+    def exists(self, company_id: str) -> bool:
+        try:
+            self._load_base(company_id)
+        except NotFoundError:
+            return False
+        return True
+
+    def invalidate(self, company_id: str | None = None) -> None:
+        with self._lock:
+            if company_id is None:
+                self._cache.clear()
+            else:
+                self._cache.pop(company_id, None)
+
+    def list_targets(self) -> list[CompanySummary]:
+        rows = self.duck.rows("SELECT profile_json FROM profiles ORDER BY company_id")
+        demo = set(self.demo_ids)
+        items = []
+        for r in rows:
+            p = CompanyProfile.model_validate_json(r["profile_json"])
+            items.append(
+                CompanySummary(
+                    company_id=p.company_id,
+                    name=p.name,
+                    industry_id=p.industry_id,
+                    industry_name=p.industry_name,
+                    region_name=p.region_name,
+                    revenue_bucket=p.revenue_bucket,
+                    is_client=p.is_client,
+                    is_demo=p.company_id in demo,
+                )
+            )
+        order = {cid: i for i, cid in enumerate(self.demo_ids)}
+        items.sort(key=lambda s: (0 if s.is_demo else 1, order.get(s.company_id, 0), s.company_id))
+        return items
+
+    def company_ids(self) -> list[str]:
+        return [
+            r["company_id"] for r in self.duck.rows("SELECT company_id FROM profiles ORDER BY company_id")
+        ]
+
+    def apply_overrides(
+        self, base: CompanyProfile, overrides: list[Override], *, group_size: int = 1
+    ) -> CompanyProfile:
+        if not overrides:
+            return base
+        p = base.model_copy(deep=True)
+        fields: set[str] = set()
+        for o in overrides:
+            if o.field == "industry_id" and o.value in self.taxonomy.industries:
+                p.industry_id = o.value
+                p.industry_name = self.taxonomy.industry(o.value).name
+                fields.add("industry_id")
+            elif o.field == "ved" and isinstance(o.value, list):
+                entries = []
+                for item in o.value:
+                    iso2 = str(item.get("country_iso2", "")).upper()
+                    country = self.taxonomy.countries.get(iso2)
+                    if country is None:
+                        continue
+                    entries.append(
+                        VedEntry(
+                            country_iso2=iso2,
+                            country_name=country_display(self.taxonomy, iso2, iso2),
+                            direction=item.get("direction", "unknown"),
+                            currencies=list(country.currencies),
+                        )
+                    )
+                p.ved = entries
+                fields.add("ved")
+            elif o.field == "products" and isinstance(o.value, dict):
+                for code, has in o.value.items():
+                    if code not in PRODUCT_NAMES:
+                        continue
+                    current = p.products.get(code)
+                    p.products[code] = ProductInfo(
+                        has=bool(has), amount_rub=current.amount_rub if current else None
+                    )
+                p.products = dict(sorted(p.products.items()))
+                fields.add("products")
+            elif o.field == "notes" and isinstance(o.value, str):
+                p.notes = o.value.strip() or None
+                fields.add("notes")
+        payload = [{"field": o.field, "value": o.value} for o in overrides]
+        return finalize_profile(
+            self.taxonomy, p, group_size=group_size, override_fields=fields, overrides_payload=payload
+        )
