@@ -1,0 +1,50 @@
+# Профиль synthetic: тождественный маппинг логических полей (docs/03-data.md §3, §8).
+profile: synthetic
+target_revenue_rub: 15_000_000_000
+tables:
+  companies:
+    path: data/synthetic/companies.csv
+    csv: {delimiter: ",", encoding: auto, header: true, decimal: "."}
+    columns:
+      company_id: company_id
+      inn: inn
+      name: name
+      okved: okved
+      okved_secondary: okved_secondary
+      region_code: region_code
+      region_name: region_name
+      revenue_rub: revenue_rub
+      employees: employees
+      is_client: is_client
+      group_id: group_id
+    transforms:
+      is_client: {true_values: ["true"]}
+  products:
+    mode: long
+    path: data/synthetic/products.csv
+    csv: {delimiter: ",", encoding: auto, header: true, decimal: "."}
+    columns: {company_id: company_id, product_code: product_code, amount_rub: amount_rub}
+  ved:
+    mode: long
+    path: data/synthetic/ved.csv
+    csv: {delimiter: ",", encoding: auto, header: true, decimal: "."}
+    columns: {company_id: company_id, country_raw: country_raw, direction: direction, amount_rub: amount_rub}
+  payments:
+    path: data/synthetic/payments.csv
+    csv: {delimiter: ",", encoding: auto, header: true, decimal: "."}
+    mode: company_counterparty
+    columns:
+      company_id: company_id
+      counterparty_id: counterparty_id
+      counterparty_inn: counterparty_inn
+      counterparty_name: counterparty_name
+      counterparty_okved: counterparty_okved
+      direction: direction
+      amount_rub: amount_rub
+      tx_count: tx_count
+      period: period
+    direction_values: {out: ["out"], in: ["in"]}
+    counterparty_key: company_id
+    exclude_self: true
+    exclude_intragroup: true
+weight_basis: auto

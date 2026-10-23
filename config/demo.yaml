@@ -1,0 +1,82 @@
+# Демо-компании и их «истории» (docs/03-data.md §8.3). Генератор синтетики создаёт их точно по долям.
+version: 1
+companies:
+  - company_id: SYN-DEMO-01
+    name: ООО «ТД Северный Металл»
+    okved: "46.72.2"
+    region_code: RU-MOW
+    region_name: Москва
+    revenue_rub: 48_000_000_000
+    products: {credit: 3_500_000_000, leasing: 400_000_000}
+    ved: [{country: CN, direction: import}]
+    suppliers_mix: {metallurgy: 0.62, wholesale_metals: 0.12, transport_logistics: 0.08, business_services: 0.05, unknown: 0.13}
+    buyers_mix: {construction_buildings: 0.38, metal_products: 0.18, machinery: 0.17, construction_infrastructure: 0.12, construction_specialized: 0.10, unknown: 0.05}
+    story: Металлотрейдер. Цены и пошлины на прокат, спрос строителей, ставка (склад на кредите), юань
+    default_role: owner
+  - company_id: SYN-DEMO-02
+    name: ГК «Волга-Строй»
+    okved: "41.20"
+    region_code: RU-SAM
+    region_name: Самарская область
+    revenue_rub: 32_000_000_000
+    products: {credit: 9_000_000_000, leasing: 600_000_000}
+    ved: []
+    suppliers_mix: {metallurgy: 0.34, building_materials: 0.22, construction_specialized: 0.15, wholesale_construction_materials: 0.14, electrical_equipment: 0.05, unknown: 0.10}
+    buyers_mix: {finance_insurance: 0.55, real_estate: 0.25, public_social: 0.10, unknown: 0.10}
+    story: Девелопер. Ипотечные программы, ключевая ставка, проектное финансирование, цены на арматуру и цемент
+    default_role: cfo
+  - company_id: SYN-DEMO-03
+    name: ООО «Автомир Юг»
+    okved: "45.11"
+    region_code: RU-KDA
+    region_name: Краснодарский край
+    revenue_rub: 21_000_000_000
+    products: {credit: 2_000_000_000}
+    ved: [{country: CN, direction: import}]
+    suppliers_mix: {automotive_manufacturing: 0.45, wholesale_tech_equipment: 0.25, transport_logistics: 0.10, finance_insurance: 0.08, unknown: 0.12}
+    buyers_mix: {finance_insurance: 0.45, transport_logistics: 0.15, business_services: 0.15, unknown: 0.25}
+    story: Дилер китайских марок. Утильсбор, пошлины, юань, автокредиты и ставка
+    default_role: cfo
+  - company_id: SYN-DEMO-04
+    name: ООО «АгроТрейд Восток»
+    okved: "46.21"
+    region_code: RU-NVS
+    region_name: Новосибирская область
+    revenue_rub: 18_000_000_000
+    products: {credit: 1_200_000_000, leasing: 150_000_000}
+    ved: [{country: CN, direction: export}, {country: KZ, direction: export}]
+    suppliers_mix: {agriculture: 0.70, transport_logistics: 0.15, wholesale_fuel: 0.05, unknown: 0.10}
+    buyers_mix: {food_production: 0.40, wholesale_agri_food: 0.30, unknown: 0.30}
+    story: Экспортёр зерна. Экспортные пошлины и квоты, логистика на восток, юань, платежи из Китая
+    default_role: treasurer
+  - company_id: SYN-DEMO-05
+    name: АО «ФармДистрибуция»
+    okved: "46.46"
+    region_code: RU-SPE
+    region_name: Санкт-Петербург
+    revenue_rub: 27_000_000_000
+    products: {credit: 1_500_000_000}
+    ved: [{country: IN, direction: import}, {country: CN, direction: import}]
+    suppliers_mix: {pharma: 0.55, wholesale_chemicals: 0.10, transport_logistics: 0.10, unknown: 0.25}
+    buyers_mix: {retail: 0.60, public_social: 0.30, unknown: 0.10}
+    story: Дистрибьютор лекарств. Рупия и юань, маркировка и регулирование, госзакупки
+    default_role: treasurer
+  - company_id: SYN-DEMO-06
+    name: ООО «Топливная компания Регион»
+    okved: "46.71"
+    region_code: RU-SVE
+    region_name: Свердловская область
+    revenue_rub: 60_000_000_000
+    products: {credit: 4_000_000_000, leasing: 1_200_000_000}
+    ved: []
+    suppliers_mix: {oil_refining: 0.80, transport_logistics: 0.12, unknown: 0.08}
+    buyers_mix: {transport_logistics: 0.35, agriculture: 0.20, construction_infrastructure: 0.15, retail: 0.15, unknown: 0.15}
+    story: Оптовик топлива. Биржевые цены, запрет экспорта бензина, демпфер, нефть
+    default_role: owner
+roles:
+  cfo: {name: Финансовый директор, short: CFO}
+  treasurer: {name: Казначей, short: Казначейство}
+  owner: {name: Собственник, short: Собственник}
+precompute:
+  top_k: 5
+  min_score: 0.15
