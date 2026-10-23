@@ -1,0 +1,10 @@
+{% import "_macros.j2" as m %}
+Компания:
+{{ profile_brief }}
+
+События:
+{% for e in events %}
+[event_id={{ e.id }}] {{ m.untrusted("event-" ~ e.id, e.title ~ ". " ~ e.summary, "news") }}
+{% endfor %}
+
+Верни RerankOutput: оценку для каждого event_id.

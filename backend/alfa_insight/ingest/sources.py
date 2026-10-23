@@ -22,6 +22,7 @@ class SourceDefaults(BaseModel):
 
 class Source(BaseModel):
     id: str
+    as_source: str | None = None  # под каким source_id писать новости (доп. ленты того же издания)
     publisher: str
     url: str
     trust: float = Field(ge=0, le=1)
@@ -34,6 +35,10 @@ class Source(BaseModel):
     full_text: bool | None = None
     enabled: bool | None = None
     geo: Literal["any", "ru"] | None = None
+
+    @property
+    def news_source_id(self) -> str:
+        return self.as_source or self.id
 
     @property
     def has_category_filter(self) -> bool:

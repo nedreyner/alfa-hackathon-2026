@@ -1,0 +1,9 @@
+{% import "_macros.j2" as m %}
+Документ: «{{ doc_title }}» ({{ doc_date or "дата не указана" }}), страница {{ page }}{% if heading %}, раздел «{{ heading }}»{% endif %}.
+
+{% for c in chunks %}
+Фрагмент chunk_no={{ c.chunk_no }}{% if c.kind == "table" %} (таблица){% endif %}:
+{{ m.untrusted(c.source_id, c.text, "alfa_research") }}
+
+{% endfor %}
+Верни ResearchExtraction.

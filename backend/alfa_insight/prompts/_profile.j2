@@ -1,0 +1,11 @@
+{{ p.name }} · {{ p.industry_name }}{% if p.okved %} (ОКВЭД {{ p.okved }}){% endif %} · {{ p.region_name or "регион не указан" }} · выручка {{ revenue_label }}
+Продукты в Альфа-Банке: {{ products_label or "нет данных" }}
+ВЭД: {{ ved_label or "нет" }}
+Закупки по отраслям (покрытие данных {{ pct(p.coverage.supply) }}): {{ suppliers_label }}
+Продажи по отраслям (покрытие данных {{ pct(p.coverage.demand) }}): {{ buyers_label }}
+Чувствительность к факторам: {{ factors_label }}
+{% if overrides_label %}Уточнения клиента: {{ overrides_label }}
+{% endif %}
+Признаки (ключи для client_features_used):
+{% for f in p.features %}{{ f.key }} — {{ f.label }}: {{ f.value }}
+{% endfor %}

@@ -58,7 +58,7 @@ def parse_feed(source: Source, content: bytes, *, now: datetime, max_age_days: i
         external_id = entry.get("id") or entry.get("guid") or link or None
         items.append(
             NewsIn(
-                source_id=source.id,
+                source_id=source.news_source_id,
                 origin="rss",
                 external_id=external_id,
                 url=link or None,

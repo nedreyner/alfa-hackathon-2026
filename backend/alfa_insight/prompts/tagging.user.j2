@@ -1,0 +1,6 @@
+{% import "_macros.j2" as m %}
+Источник: {{ publisher }}. Дата публикации: {{ published_at }}. Рубрики: {{ categories | join(", ") if categories else "нет" }}.
+
+{{ m.untrusted("news", title ~ "\n\n" ~ body, "news") }}
+
+Верни разметку NewsTagging.

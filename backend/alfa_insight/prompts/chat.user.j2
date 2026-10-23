@@ -1,0 +1,13 @@
+Контекст — разбор события для компании:
+{{ profile_brief }}
+
+Инсайт: {{ insight.headline }}
+Почему важно: {{ insight.why_you }}
+Ключевые утверждения:
+{% for c in insight_claims %}- ({{ c.type }}) {{ c.text }} [{{ c.evidence | join(", ") }}]
+{% endfor %}
+
+Evidence инсайта:
+{{ evidence_block }}
+
+Вопрос клиента: {{ question }}

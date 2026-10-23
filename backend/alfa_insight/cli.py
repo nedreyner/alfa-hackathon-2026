@@ -6,7 +6,7 @@ import typer
 
 from alfa_insight import __version__
 from alfa_insight.data.commands import data_app
-from alfa_insight.ingest.commands import ingest_app
+from alfa_insight.ingest.commands import ingest_app, seed_app
 from alfa_insight.llm.commands import llm_app
 
 app = typer.Typer(
@@ -37,7 +37,6 @@ def _stub_group(name: str, help_text: str) -> typer.Typer:
 
 GROUPS: dict[str, str] = {
     "pipeline": "Конвейер новостей: префильтр, разметка, кластеризация.",
-    "seed": "Seed-набор новостей: сбор и кураторство.",
     "research": "Аналитика Альфа-Банка из PDF.",
     "macro": "Макроданные ЦБ.",
     "rank": "Ранжирование событий для компаний.",
@@ -54,6 +53,7 @@ for _name, _help in GROUPS.items():
 app.add_typer(data_app, name="data")
 app.add_typer(llm_app, name="llm")
 app.add_typer(ingest_app, name="ingest")
+app.add_typer(seed_app, name="seed")
 
 db_app = typer.Typer(help="SQLite: миграции и обслуживание.", no_args_is_help=True)
 app.add_typer(db_app, name="db")

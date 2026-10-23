@@ -1,0 +1,15 @@
+{% import "_macros.j2" as m %}
+Компания: {{ company_name }} ({{ industry_name }}).
+
+Утверждения:
+{% for c in claims %}
+[{{ c.path }}] ({{ c.type }}) {{ c.text }}
+  источники: {{ c.evidence | join(", ") if c.evidence else "нет" }}
+{% endfor %}
+
+Источники:
+{% for e in evidence %}
+[{{ e.eid }}] {{ e.kind_label }} · {{ e.title }}
+{% if e.untrusted %}{{ m.untrusted(e.eid, e.text, e.kind) }}{% else %}{{ e.text }}{% endif %}
+
+{% endfor %}

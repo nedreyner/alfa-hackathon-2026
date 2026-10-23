@@ -8,10 +8,10 @@ sources:
   - {id: interfax,   publisher: Интерфакс,   url: "https://www.interfax.ru/rss",      trust: 0.9, kind: agency,
      categories_allow: ["Экономика"], categories_soft: true}
   - {id: tass,       publisher: ТАСС,        url: "https://tass.ru/rss/v2.xml",       trust: 0.9, kind: agency,
-     categories_allow: ["Экономика и бизнес"]}
+     categories_allow: ["Экономика и бизнес"], full_text: false}   # страницы статей отвечают 403 на UA бота (24.10.2026)
   - {id: kommersant, publisher: Коммерсантъ, url: "https://www.kommersant.ru/rss/section-economics.xml", trust: 0.9, kind: media}
   - {id: vedomosti,  publisher: Ведомости,   url: "https://www.vedomosti.ru/rss/news", trust: 0.9, kind: media,
-     categories_allow_prefix: ["Бизнес", "Экономика", "Финансы", "Инвестиции", "Технологии"]}
+     categories_allow_prefix: ["Бизнес", "Экономика", "Финансы", "Инвестиции", "Технологии", "Авто", "Недвижимость"]}
   - {id: prime,      publisher: ПРАЙМ,       url: "https://1prime.ru/export/rss2/index.xml", trust: 0.85, kind: agency}
   - {id: rbc,        publisher: РБК,         url: "https://rssexport.rbc.ru/rbcnews/news/30/full.rss", trust: 0.9, kind: media,
      geo: ru}       # из зарубежной сети сбрасывает соединение (проверено 22.10.2026)

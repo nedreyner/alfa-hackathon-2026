@@ -1,0 +1,19 @@
+# Дополнительные тематические ленты для `alfa seed collect --feeds config/seed_feeds.yaml`.
+# Рубрики Ведомостей отдают по 200 записей за несколько месяцев — это история для демо-сюжетов.
+version: 1
+user_agent: "AlfaInsightBot/0.1 (+https://github.com/nedreyner/alfa-hackathon-2026)"
+defaults: {timeout_s: 20, max_items: 200, full_text: true, enabled: true, geo: any}
+sources:
+  - {id: vedomosti_industry, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/business/industry",       trust: 0.9, kind: media}
+  - {id: vedomosti_energy, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/business/energy",         trust: 0.9, kind: media}
+  - {id: vedomosti_retail, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/business/retail",         trust: 0.9, kind: media}
+  - {id: vedomosti_transport, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/business/transport",      trust: 0.9, kind: media}
+  - {id: vedomosti_auto, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/auto",                    trust: 0.9, kind: media}
+  - {id: vedomosti_regulations, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/economics/regulations",   trust: 0.9, kind: media}
+  - {id: vedomosti_realty, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/realty",                  trust: 0.9, kind: media}
+  - {id: vedomosti_banks, as_source: vedomosti, publisher: Ведомости, url: "https://www.vedomosti.ru/rss/rubric/finance/banks",           trust: 0.9, kind: media}
+  - {id: kommersant_business, as_source: kommersant, publisher: Коммерсантъ, url: "https://www.kommersant.ru/rss/section-business.xml",       trust: 0.9, kind: media}
+  - {id: kommersant_finance, as_source: kommersant, publisher: Коммерсантъ, url: "https://www.kommersant.ru/rss/section-finance.xml",        trust: 0.9, kind: media}
+  - {id: prime_state_regulation, as_source: prime, publisher: ПРАЙМ, url: "https://1prime.ru/export/rss2/state_regulation/index.xml",          trust: 0.85, kind: agency}
+  - {id: prime_business, as_source: prime, publisher: ПРАЙМ, url: "https://1prime.ru/export/rss2/business/index.xml",                  trust: 0.85, kind: agency}
+  - {id: prime_finance, as_source: prime, publisher: ПРАЙМ, url: "https://1prime.ru/export/rss2/finance/index.xml",                   trust: 0.85, kind: agency}

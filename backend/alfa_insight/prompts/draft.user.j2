@@ -1,0 +1,17 @@
+{% import "_macros.j2" as m %}
+Компания:
+{{ profile_brief }}
+
+Evidence — доказательная база, ссылайся на идентификаторы:
+{% for e in evidence %}
+[{{ e.eid }}] {{ e.kind_label }} · {{ e.title }}{% if e.publisher %} · {{ e.publisher }}{% endif %}{% if e.published_at %} · {{ e.published_at }}{% endif %}
+{% if e.untrusted %}{{ m.untrusted(e.eid, e.text, e.kind) }}{% else %}{{ e.text }}{% endif %}
+
+{% endfor %}
+Пути влияния (рассчитаны системой по данным клиента; числа из них — факты со ссылкой на указанный E-id):
+{{ chain_block }}
+
+Кандидаты продуктов банка:
+{{ products_block }}
+
+Подготовь InsightDraft.

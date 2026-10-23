@@ -208,6 +208,87 @@ class NewsStore:
             (score, simhash_signed, news_id),
         )
 
+    def save_tags(
+        self,
+        news_id: int,
+        clean: Any,
+        *,
+        model: str,
+        prompt_version: str,
+        title_lemmas: str,
+        body_lemmas: str,
+        status: str,
+    ) -> None:
+        """Разметка, отрасли, факторы, география, сущности и FTS — одной транзакцией."""
+        now = to_iso(utc_now())
+        with self.db.tx():
+            for table in ("news_industries", "news_factors", "news_geo", "news_entities"):
+                self.db.execute(f"DELETE FROM {table} WHERE news_id = ?", (news_id,))
+            self.db.execute("DELETE FROM news_fts WHERE rowid = ?", (news_id,))
+            self.db.execute(
+                "INSERT OR REPLACE INTO news_tags(news_id, model, prompt_version, is_business_relevant, event_type, "
+                "importance, horizon, summary, payload_json, tagged_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    news_id,
+                    model,
+                    prompt_version,
+                    int(clean.is_business_relevant),
+                    clean.event_type,
+                    clean.importance,
+                    clean.horizon,
+                    clean.summary,
+                    clean.model_dump_json(),
+                    now,
+                ),
+            )
+            self.db.executemany(
+                "INSERT INTO news_industries(news_id, industry_id, effect, impact, confidence, rationale) VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (news_id, i.industry_id, i.effect, i.impact, i.confidence, i.rationale)
+                    for i in clean.industries
+                ],
+            )
+            self.db.executemany(
+                "INSERT INTO news_factors(news_id, factor_id, direction, impact, confidence, rationale) VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (news_id, f.factor_id, f.direction, f.impact, f.confidence, f.rationale)
+                    for f in clean.factors
+                ],
+            )
+            self.db.executemany(
+                "INSERT OR IGNORE INTO news_geo(news_id, geo) VALUES (?, ?)",
+                [(news_id, g) for g in clean.geo],
+            )
+            self.db.executemany(
+                "INSERT OR IGNORE INTO news_entities(news_id, kind, name) VALUES (?, ?, ?)",
+                [(news_id, e.kind, e.name) for e in clean.entities],
+            )
+            self.db.execute(
+                "INSERT INTO news_fts(rowid, title_lemmas, body_lemmas) VALUES (?, ?, ?)",
+                (news_id, title_lemmas, body_lemmas),
+            )
+            self.db.execute("UPDATE news SET status = ?, error = NULL WHERE id = ?", (status, news_id))
+
+    def tags(self, news_id: int) -> dict[str, Any] | None:
+        row = self.db.query_one(
+            "SELECT payload_json, model, prompt_version FROM news_tags WHERE news_id = ?", (news_id,)
+        )
+        if row is None:
+            return None
+        return {
+            "payload": orjson.loads(row["payload_json"]),
+            "model": row["model"],
+            "prompt_version": row["prompt_version"],
+        }
+
+    def industries(self, news_id: int) -> list[dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self.db.query(
+                "SELECT * FROM news_industries WHERE news_id = ? ORDER BY impact DESC", (news_id,)
+            )
+        ]
+
     def update_dates(self, shifts: dict[int, tuple[str, str]]) -> None:
         with self.db.tx():
             for news_id, (published_at, fetched_at) in shifts.items():
