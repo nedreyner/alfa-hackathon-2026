@@ -214,13 +214,15 @@ class LLMRouter:
 
     # ── основной вызов ──
     def _payload(
-        self, req: LLMRequest, model: ModelConfig, temperature: float, max_tokens: int
+        self, req: LLMRequest, model: ModelConfig, temperature: float, max_tokens: int, reasoning: bool | None
     ) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "messages": [_message_dict(m) for m in req.messages],
             "temperature": temperature,
             self._token_param_for(model): max_tokens,
         }
+        if reasoning is not None and not self.is_fake:
+            payload["extra_body"] = {"reasoning": {"enabled": reasoning}}
         if req.tools:
             payload["tools"] = [{"type": "function", "function": t.model_dump()} for t in req.tools]
         if req.tool_choice is not None:
@@ -324,6 +326,8 @@ class LLMRouter:
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        if tcfg.reasoning is not None:
+            canonical["reasoning"] = tcfg.reasoning
         key = cache_key(canonical)
         if use_cache:
             assert self.cache is not None
@@ -363,7 +367,7 @@ class LLMRouter:
                 except BudgetExceeded as exc:
                     self._record(self._rec(req, priority, model.key, "budget_blocked", error=exc.scope))
                     raise
-            payload = self._payload(req, model, temperature, max_tokens)
+            payload = self._payload(req, model, temperature, max_tokens, tcfg.reasoning)
             started = time.monotonic()
             try:
                 response, kind = await self._call_with_retries(model, payload, tcfg.timeout_s, req, priority)

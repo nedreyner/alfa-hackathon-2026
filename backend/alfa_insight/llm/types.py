@@ -137,6 +137,7 @@ class ModelCapabilities(BaseModel):
     json_object: bool | None = None
     vision: bool | None = None
     usage: bool | None = None
+    reasoning_toggle: bool | None = None  # шлюз принимает reasoning: {enabled: false}
 
 
 class ModelConfig(BaseModel):
@@ -158,6 +159,8 @@ class TaskConfig(BaseModel):
     timeout_s: float = 30.0
     exclude_drafter_family: bool = False
     cache: bool = True
+    # None — поведение модели по умолчанию; False — отключить рассуждения (дешевле и быстрее в разы)
+    reasoning: bool | None = None
 
 
 class GatewayConfig(BaseModel):

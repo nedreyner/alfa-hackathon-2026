@@ -101,3 +101,39 @@ def cache_import(path: Path = typer.Argument(..., help="Файл JSONL")) -> Non
         return
     items = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     typer.echo(f"{path}: загружено {store.cache_import(items)} из {len(items)}")
+
+
+@llm_app.command("probe")
+def probe_cmd(
+    write_config: bool = typer.Option(
+        False, "--write-config", help="Записать capabilities и token_param в models.yaml"
+    ),
+) -> None:
+    """Проверить модели шлюза: /models, basic, tools, json_schema, json_object, vision (живые вызовы)."""
+    import asyncio
+
+    from alfa_insight.llm import load_models_config
+    from alfa_insight.llm.client import GatewayClient
+    from alfa_insight.llm.probe import format_report, run_probe
+    from alfa_insight.llm.probe import write_config as write_models
+    from alfa_insight.settings import get_settings
+
+    settings = get_settings()
+    config = load_models_config(settings.config_path)
+    client = GatewayClient(
+        settings.llm_base_url,
+        settings.llm_base_url_fallback or None,
+        settings.llm_api_key.get_secret_value(),
+        config.gateway.timeout_s,
+        config.gateway.connect_timeout_s,
+    )
+    report = asyncio.run(run_probe(config, client))
+    out = settings.runtime_dir / "model_capabilities.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    typer.echo(format_report(report))
+    total = sum(m.get("cost_rub", 0.0) for m in report["models"].values())
+    typer.echo(f"Стоимость probe: {total:.4f} ₽; отчёт: {out}")
+    if write_config:
+        write_models(settings.config_path / "models.yaml", config, report)
+        typer.echo(f"{settings.config_path / 'models.yaml'}: capabilities и token_param обновлены")
