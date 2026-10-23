@@ -22,7 +22,23 @@ def settings(tmp_path: Path) -> Iterator[Settings]:
     data_dir = tmp_path / "data"
     (data_dir / "runtime").mkdir(parents=True)
     (data_dir / "reference").symlink_to(REPO_ROOT / "data" / "reference")
+    (data_dir / "synthetic").symlink_to(REPO_ROOT / "data" / "synthetic")
     s = load_settings(data_dir=data_dir, config_dir=REPO_ROOT / "config", llm_mode="fake")
     get_settings.cache_clear()
     yield s
     get_settings.cache_clear()
+
+
+@pytest.fixture(scope="session")
+def synthetic_duckdb(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """DuckDB, собранная из закоммиченной синтетики (один раз на сессию)."""
+    from alfa_insight.data.build import build
+
+    data_dir = tmp_path_factory.mktemp("synthetic_build") / "data"
+    (data_dir / "runtime").mkdir(parents=True)
+    (data_dir / "reference").symlink_to(REPO_ROOT / "data" / "reference")
+    (data_dir / "synthetic").symlink_to(REPO_ROOT / "data" / "synthetic")
+    s = load_settings(
+        data_dir=data_dir, config_dir=REPO_ROOT / "config", llm_mode="fake", data_profile="synthetic"
+    )
+    return build(s, force=True).path

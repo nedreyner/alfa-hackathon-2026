@@ -103,10 +103,10 @@ SELECT cp.counterparty_id, COALESCE(cp.name, c.name) AS name, cp.inn,
             WHEN o2.industry_id IS NOT NULL THEN 'payments_okved'
             WHEN ni.industry_id IS NOT NULL THEN 'name_keywords'
             ELSE 'unknown' END AS method,
-       CASE WHEN o1.industry_id IS NOT NULL THEN 1.0
+       CAST(CASE WHEN o1.industry_id IS NOT NULL THEN 1.0
             WHEN o2.industry_id IS NOT NULL THEN 0.9
             WHEN ni.industry_id IS NOT NULL THEN 0.6
-            ELSE 0.0 END AS confidence
+            ELSE 0.0 END AS DOUBLE) AS confidence
 FROM cp
 LEFT JOIN c                 ON {join}
 LEFT JOIN okved_industry o1 ON o1.okved = c.okved AND o1.industry_id <> 'unknown'

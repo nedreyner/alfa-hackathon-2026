@@ -10,7 +10,6 @@ import codecs
 import hashlib
 import json
 import os
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -26,12 +25,8 @@ from alfa_insight.reference.taxonomy import Taxonomy, load_taxonomy
 from alfa_insight.settings import Settings
 from alfa_insight.timeutil import to_iso, utc_now
 
-BUILD_VERSION = "3"
+BUILD_VERSION = "4"
 log = get_logger("data.build")
-
-# Хук для T1.7: факторы и профили считаются в Python поверх собранных таблиц.
-PostBuildHook = Callable[[duckdb.DuckDBPyConnection, "BuildContext"], None]
-POST_BUILD_HOOKS: list[PostBuildHook] = []
 
 
 @dataclass
@@ -428,6 +423,7 @@ def read_meta(path: Path) -> dict[str, Any] | None:
 
 
 def build(settings: Settings, *, force: bool = False, mapping: DataMapping | None = None) -> BuildResult:
+    from alfa_insight.data.profiles import build_profiles
     from alfa_insight.data.validate import run_checks, store_checks
 
     mapping = mapping or load_mapping(settings.config_path, settings.data_profile)
@@ -476,8 +472,7 @@ def build(settings: Settings, *, force: bool = False, mapping: DataMapping | Non
         )
         _name_industry(conn, ctx)
         _derived(conn, ctx)
-        for hook in POST_BUILD_HOOKS:
-            hook(conn, ctx)
+        ctx.meta["profiles"] = build_profiles(conn, ctx)
         for stg in ("stg_companies", "stg_payments", "stg_products", "stg_ved"):
             conn.execute(f"DROP TABLE IF EXISTS {stg}")
         ctx.meta.update(
