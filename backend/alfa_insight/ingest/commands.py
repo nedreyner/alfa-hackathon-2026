@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 
 import typer
+from pydantic import BaseModel
 
 ingest_app = typer.Typer(help="Сбор новостей: RSS, seed.", no_args_is_help=True)
 
@@ -118,3 +119,45 @@ def seed_curate(path: str = typer.Option("data/seed/news.jsonl", "--path")) -> N
         kept.append(it)
     write_seed(file, kept)
     typer.echo(f"{file}: сохранено {len(kept)}")
+
+
+pipeline_app = typer.Typer(
+    help="Конвейер новостей: префильтр, разметка, кластеризация.", no_args_is_help=True
+)
+
+
+def _print_stats(stats: BaseModel) -> None:
+    typer.echo(
+        " ".join(
+            f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}" for k, v in stats.model_dump().items()
+        )
+    )  # type: ignore[attr-defined]
+
+
+@pipeline_app.command("tick")
+def pipeline_tick_cmd(
+    max_tag: int = typer.Option(40, "--max-tag"),
+    max_cost: float | None = typer.Option(None, "--max-cost", help="Лимит стоимости разметки, ₽"),
+    no_fetch: bool = typer.Option(False, "--no-fetch", help="Не скачивать полный текст"),
+) -> None:
+    """Один тик конвейера."""
+    from alfa_insight.appctx import build_context
+    from alfa_insight.ingest.pipeline import pipeline_tick
+
+    ctx = build_context()
+    _print_stats(asyncio.run(pipeline_tick(ctx, max_tag=max_tag, max_cost_rub=max_cost, fetch=not no_fetch)))
+
+
+@pipeline_app.command("run")
+def pipeline_run_cmd(
+    until: str = typer.Option("clustered", "--until", help="extracted | clustered"),
+    max_cost: float | None = typer.Option(None, "--max-cost", help="Лимит стоимости разметки, ₽"),
+    no_fetch: bool = typer.Option(False, "--no-fetch"),
+) -> None:
+    """Тики, пока есть работа (или до лимита стоимости)."""
+    from alfa_insight.appctx import build_context
+    from alfa_insight.ingest.pipeline import pending_work, pipeline_run
+
+    ctx = build_context()
+    _print_stats(asyncio.run(pipeline_run(ctx, until=until, max_cost_rub=max_cost, fetch=not no_fetch)))
+    typer.echo(f"Осталось: {pending_work(ctx)}")

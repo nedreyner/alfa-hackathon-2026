@@ -135,3 +135,66 @@ def stage_prefilter_dedup(ctx: AppContext, rows: list[NewsRow]) -> tuple[list[Ne
         dd.remember(index, row.id, row.content_hash, fp)
         survivors.append(row)
     return survivors, stats
+
+
+async def pipeline_tick(
+    ctx: AppContext,
+    *,
+    max_extract: int = 50,
+    max_tag: int = 40,
+    max_cost_rub: float | None = None,
+    fetch: bool = True,
+) -> PipelineStats:
+    """Один проход: извлечение → префильтр и дедупликация → разметка → кластеризация."""
+    from alfa_insight.ingest.clustering import cluster_tagged
+    from alfa_insight.ingest.tagging import tag_batch
+
+    stats = await stage_extract(ctx, max_extract=max_extract, fetch=fetch)
+    store = NewsStore(ctx.db)
+    survivors, pf_stats = stage_prefilter_dedup(ctx, store.by_status("extracted", 10_000))
+    stats.add(pf_stats)
+    to_tag = sorted(survivors, key=lambda r: (r.published_at, r.id), reverse=True)[:max_tag]
+    if to_tag and (max_cost_rub is None or max_cost_rub > 0):
+        tagged, filtered, failed, cost = await tag_batch(ctx, to_tag, max_cost_rub=max_cost_rub)
+        stats.tagged += tagged
+        stats.filtered_out += filtered
+        stats.failed += failed
+        stats.cost_rub += cost
+    joined, created = cluster_tagged(ctx)
+    stats.clustered += joined + created
+    return stats
+
+
+def pending_work(ctx: AppContext) -> dict[str, int]:
+    counts = NewsStore(ctx.db).count_by_status()
+    return {k: counts.get(k, 0) for k in ("new", "extracted", "tagged")}
+
+
+async def pipeline_run(
+    ctx: AppContext,
+    *,
+    until: str = "clustered",
+    max_cost_rub: float | None = None,
+    max_ticks: int = 100,
+    fetch: bool = True,
+) -> PipelineStats:
+    """Тики, пока есть работа или пока не исчерпан `max_cost_rub` (необработанное остаётся extracted)."""
+    total = PipelineStats()
+    for _ in range(max_ticks):
+        remaining = None if max_cost_rub is None else max(0.0, max_cost_rub - total.cost_rub)
+        tick = await pipeline_tick(ctx, max_extract=100, max_tag=40, max_cost_rub=remaining, fetch=fetch)
+        total.add(tick)
+        work = pending_work(ctx)
+        budget_left = remaining is None or remaining - tick.cost_rub > 0
+        progressed = (
+            tick.extracted + tick.tagged + tick.clustered + tick.filtered_out + tick.duplicates + tick.failed
+        )
+        if until == "extracted" and work["new"] == 0:
+            break
+        if (
+            not progressed
+            or not budget_left
+            or (work["new"] == 0 and work["extracted"] == 0 and work["tagged"] == 0)
+        ):
+            break
+    return total
