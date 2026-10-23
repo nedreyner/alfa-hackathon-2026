@@ -14,23 +14,18 @@ from pydantic import BaseModel
 
 from alfa_insight.errors import ConfigError
 from alfa_insight.llm.types import Message
+from alfa_insight.text.normalize import count_invisible, strip_invisible
+
+__all__ = ["count_invisible", "sanitize_untrusted"]
 
 DEFAULT_UNTRUSTED_LIMIT = 12_000
-# Управляющие (кроме \t \n \r), невидимые и символы-теги Unicode
-_INVISIBLE = re.compile(
-    r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\U000e0000-\U000e007f]"
-)
 _CLOSE_TAG = re.compile(r"</\s*untrusted", re.I)
-
-
-def count_invisible(text: str) -> int:
-    return len(_INVISIBLE.findall(text))
 
 
 def sanitize_untrusted(text: Any, limit: int = DEFAULT_UNTRUSTED_LIMIT) -> str:
     """Удалить невидимые символы, экранировать закрывающий тег обёртки, обрезать до лимита."""
     value = "" if text is None else str(text)
-    value = _INVISIBLE.sub("", value)
+    value = strip_invisible(value)
     value = _CLOSE_TAG.sub(r"<\\/untrusted", value)
     if len(value) > limit:
         value = value[:limit].rstrip() + " […]"
