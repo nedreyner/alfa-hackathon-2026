@@ -1,0 +1,34 @@
+# Веса ранжирования и «цепной реакции» (docs/07-ranking.md §6). Калибруются на офлайн-разметке.
+version: 1
+window_days: 7
+min_relevance_to_store: 0.05
+channel_weights: {own: 1.0, supply: 0.9, demand: 0.8, factor: 0.7}
+secondary_industry_weight: 0.5
+min_share: 0.02
+min_factor_exposure: 0.15
+max_path_contribution: 0.95
+direction_mixed_ratio: 0.25
+importance: {base: 0.6, slope: 0.4}
+freshness: {floor: 0.5}
+trust: {publisher_bonus: 0.05, publisher_bonus_cap: 4}
+region_bonus: 0.10
+impact_levels:
+  critical: {min_score: 0.55, min_importance: 4}
+  high: {min_score: 0.35}
+  medium: {min_score: 0.18}
+feed: {min_score: 0.10, min_relevance: 0.08, page_size: 20}
+roles:
+  cfo:
+    half_life_h: 48
+    channels: {own: 1.0, supply: 1.2, demand: 1.0, factor: 1.0}
+    factors: {tax_burden: 1.3, customs_tariffs: 1.2, energy_prices: 1.2, key_rate: 1.1}
+  treasurer:
+    half_life_h: 24
+    channels: {own: 0.8, supply: 0.9, demand: 0.9, factor: 1.4}
+    factors: {key_rate: 1.4, credit_conditions: 1.3, payment_discipline: 1.3, cross_border_payments: 1.5,
+              fx_usd: 1.5, fx_eur: 1.5, fx_cny: 1.5, fx_try: 1.5, fx_aed: 1.5, fx_inr: 1.5, fx_kzt: 1.5}
+  owner:
+    half_life_h: 96
+    channels: {own: 1.3, supply: 1.0, demand: 1.2, factor: 0.9}
+    factors: {gov_spending: 1.3, sanctions: 1.2, consumer_demand: 1.2, mortgage_market: 1.2}
+rerank: {enabled: false, top_n: 20, alpha: 0.4}
