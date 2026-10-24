@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from alfa_insight.agent.schemas import Insight, Level, SourceKind
+from alfa_insight.agent.schemas import ChatAnswer, Insight, Level, SourceKind, SourceRef
 from alfa_insight.data.models import CompanyProfile, IndustryShare
 from alfa_insight.llm.budget import BudgetMode
 from alfa_insight.ranking.models import Direction, ImpactLevel, Role
@@ -267,3 +267,48 @@ class LeadOut(BaseModel):
     id: int
     product_name: str
     message: str
+
+
+# ── генерация, фича B, чат (§4.4–4.6) ──
+class GenerateResponse(BaseModel):
+    status: Literal["ready", "started", "running"]
+    insight_id: str | None
+    run_id: str | None
+
+
+class RunRef(BaseModel):
+    run_id: str
+
+
+class AnalyzeHistoryItem(BaseModel):
+    run_id: str
+    created_at: datetime
+    status: str
+    input_label: str
+    insight_id: str | None
+    headline: str | None
+
+
+class ChatIn(BaseModel):
+    message: str = Field(min_length=2, max_length=1000)
+    thread_id: str | None = Field(default=None, max_length=64)
+
+
+class ChatStartResponse(BaseModel):
+    run_id: str
+    thread_id: str
+    user_message_id: int
+
+
+class ChatMessageOut(BaseModel):
+    id: int
+    role: Literal["user", "assistant"]
+    text: str | None
+    answer: ChatAnswer | None
+    sources: list[SourceRef]
+    created_at: datetime
+
+
+class ChatThreadResponse(BaseModel):
+    thread_id: str | None
+    messages: list[ChatMessageOut]

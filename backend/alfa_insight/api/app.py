@@ -19,6 +19,7 @@ from alfa_insight.api.routes import (
     insights,
     profile,
     reference,
+    runs,
     session,
     sources,
     system,
@@ -31,7 +32,7 @@ from alfa_insight.services.jobs import JobRunner
 log = get_logger("api.app")
 ROUTERS = [
     system.router, companies.router, session.router, reference.router, profile.router, feed.router,
-    insights.router, sources.router, telemetry.router,
+    insights.router, sources.router, telemetry.router, runs.router,
 ]  # fmt: skip
 
 

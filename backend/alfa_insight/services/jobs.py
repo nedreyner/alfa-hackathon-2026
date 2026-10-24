@@ -74,6 +74,11 @@ class JobRunner:
     fetch_options: dict[str, Any] = field(default_factory=dict)  # тесты фичи B: transport, resolver
 
     @property
+    def in_flight(self) -> int:
+        """Запущенные интерактивные прогоны, включая ещё не начавшие выполняться задачи."""
+        return max(self._active, len(self._tasks))
+
+    @property
     def runs(self) -> RunStore:
         return RunStore(self.app.db)
 
@@ -105,7 +110,7 @@ class JobRunner:
         active = self.runs.active_for(company_id, event_id, "insight")
         if active is not None:
             return StartResult(status="running", run_id=active.id)
-        if self._active >= self.app.settings.agent_max_concurrent_runs:
+        if self.in_flight >= self.app.settings.agent_max_concurrent_runs:
             raise Busy("Сейчас идёт много разборов, попробуйте через минуту")
         run_id = self.runs.create(
             kind="insight", mode="pipeline", company_id=company_id, role=role, event_id=event_id,
@@ -118,7 +123,7 @@ class JobRunner:
         self, company_id: str, role: str, inp: AnalyzeInput, *, session_id: str | None = None
     ) -> str:
         """POST /api/analyze: прогон kind=analyze, mode=agentic; событие появится по ходу intake."""
-        if self._active >= self.app.settings.agent_max_concurrent_runs:
+        if self.in_flight >= self.app.settings.agent_max_concurrent_runs:
             raise Busy("Сейчас идёт много разборов, попробуйте через минуту")
         run_id = self.runs.create(
             kind="analyze", mode="agentic", company_id=company_id, role=role, session_id=session_id,
@@ -150,7 +155,7 @@ class JobRunner:
             owner = chat.thread_owner(thread_id)
             if owner is not None and (owner[0] != insight_id or owner[1] != company_id):
                 raise NotFoundError("Тред не найден", {"thread_id": thread_id})
-        if self._active >= self.app.settings.agent_max_concurrent_runs:
+        if self.in_flight >= self.app.settings.agent_max_concurrent_runs:
             raise Busy("Сейчас идёт много разборов, попробуйте через минуту")
         thread = thread_id or new_id("thr")
         message_id = chat.add(
