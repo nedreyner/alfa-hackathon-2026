@@ -230,3 +230,16 @@ def test_scope_isolation(env) -> None:  # type: ignore[no-untyped-def]
         ).status_code
         == 404
     )
+
+
+def test_what_if_endpoint(env) -> None:  # type: ignore[no-untyped-def]
+    c, _app, _event_id, insight_id = env
+    login(c)
+    r = c.post(f"/api/insights/{insight_id}/what-if", json={"rate_delta_pp": -1, "fx_delta_pct": 5})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["label"] == "Вывод ИИ: оценка" and isinstance(body["currencies"], list)
+    assert (body["rate"] is not None) == body["rate_available"]
+    assert c.post(f"/api/insights/{insight_id}/what-if", json={"rate_delta_pp": 5}).status_code == 422
+    login(c, "SYN-DEMO-01")
+    assert c.post(f"/api/insights/{insight_id}/what-if", json={}).status_code == 404

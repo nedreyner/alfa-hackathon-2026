@@ -10,6 +10,7 @@ import { ArrowLeft } from '../components/common/icons';
 import { ConfidenceBadge, DirectionTag, ImpactBadge } from '../components/insight/Badges';
 import { ClaimText } from '../components/insight/ClaimText';
 import { FeedbackBar } from '../components/insight/FeedbackBar';
+import { WhatIfPanel } from '../components/insight/WhatIfPanel';
 import { LeadModal } from '../components/insight/LeadModal';
 import {
   ActionList,
@@ -144,6 +145,7 @@ export default function InsightPage() {
         <Section title={SECTIONS.opportunities} id="opps">
           <ConsequenceList items={opps} empty="Явных возможностей не видим" />
         </Section>
+        <WhatIfPanel insightId={insight.id} />
         <Section title={SECTIONS.actions} id="actions">
           <ActionList
             actions={insight.actions}

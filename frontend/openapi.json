@@ -773,6 +773,59 @@
         }
       }
     },
+    "/api/insights/{insight_id}/what-if": {
+      "post": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Insight What If",
+        "description": "Фича C: пересчёт чувствительности к ставке и курсу для путей влияния инсайта, без LLM.",
+        "operationId": "insight_what_if",
+        "parameters": [
+          {
+            "name": "insight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Insight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatIfIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatIfOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sources/{source_id}": {
       "get": {
         "tags": [
@@ -3029,6 +3082,73 @@
         ],
         "title": "FeedbackOut"
       },
+      "FxScenario": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "rate_now": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Now"
+          },
+          "rate_new": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate New"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "import",
+              "export",
+              "mixed"
+            ],
+            "title": "Direction"
+          },
+          "delta_rub_per_billion": {
+            "type": "number",
+            "title": "Delta Rub Per Billion"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Level"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "rate_now",
+          "rate_new",
+          "direction",
+          "delta_rub_per_billion",
+          "level",
+          "text"
+        ],
+        "title": "FxScenario"
+      },
       "GenerateResponse": {
         "properties": {
           "status": {
@@ -4151,6 +4271,89 @@
         },
         "type": "object",
         "title": "RankingVariant"
+      },
+      "RateScenario": {
+        "properties": {
+          "key_rate_now": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Rate Now"
+          },
+          "key_rate_new": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Rate New"
+          },
+          "debt_rub": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Rub"
+          },
+          "delta_rub_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Rub Year"
+          },
+          "share_of_revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Revenue"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Level"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key_rate_now",
+          "key_rate_new",
+          "debt_rub",
+          "delta_rub_year",
+          "share_of_revenue",
+          "level",
+          "text"
+        ],
+        "title": "RateScenario"
       },
       "ReadyResponse": {
         "properties": {
@@ -5284,6 +5487,92 @@
           "facts"
         ],
         "title": "WhatHappened"
+      },
+      "WhatIfIn": {
+        "properties": {
+          "rate_delta_pp": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": -2.0,
+            "title": "Rate Delta Pp",
+            "description": "Изменение ставки, п. п.",
+            "default": 0.0
+          },
+          "fx_delta_pct": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": -10.0,
+            "title": "Fx Delta Pct",
+            "description": "Изменение курса, %",
+            "default": 0.0
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency",
+            "description": "Валюта сценария курса, например CNY"
+          }
+        },
+        "type": "object",
+        "title": "WhatIfIn"
+      },
+      "WhatIfOut": {
+        "properties": {
+          "rate_available": {
+            "type": "boolean",
+            "title": "Rate Available"
+          },
+          "currencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Currencies"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RateScenario"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fx": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FxScenario"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": "Вывод ИИ: оценка"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Арифметическая оценка по данным профиля: без учёта хеджирования, фиксированных ставок и пересмотра цен."
+          }
+        },
+        "type": "object",
+        "required": [
+          "rate_available",
+          "currencies"
+        ],
+        "title": "WhatIfOut"
       },
       "WhyItMatters": {
         "properties": {

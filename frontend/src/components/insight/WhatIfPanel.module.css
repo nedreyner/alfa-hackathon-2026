@@ -1,0 +1,67 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  padding: 16px 18px;
+  border-radius: var(--ai-radius-md);
+  background: var(--ai-bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.range {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rangeHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.range input {
+  width: 100%;
+  accent-color: var(--ai-accent);
+}
+
+.result {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.currencies {
+  display: flex;
+  gap: 6px;
+}
+
+.cur {
+  border: 1px solid var(--ai-border);
+  background: var(--ai-bg);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.curActive {
+  border-color: var(--ai-text);
+  font-weight: 600;
+}
+
+.label {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--ai-mixed-bg);
+  color: var(--ai-mixed);
+  font-weight: 600;
+}

@@ -17,6 +17,7 @@ from alfa_insight.api.session import SessionData
 from alfa_insight.appctx import AppContext
 from alfa_insight.errors import InsightNotReady, NotFoundError
 from alfa_insight.services.insights import InsightView, current_prompt_version, get_insight
+from alfa_insight.services.what_if import WhatIfIn, WhatIfOut, what_if
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
 from alfa_insight.store.runs import RunRow, RunStore
@@ -106,3 +107,14 @@ async def post_feedback(
         reason=body.reason, comment=body.comment,
     )  # fmt: skip
     return FeedbackOut(**fb)
+
+
+@router.post("/insights/{insight_id}/what-if", response_model=WhatIfOut)
+async def insight_what_if(
+    insight_id: str,
+    body: WhatIfIn,
+    s: SessionData = Depends(current_session),
+    ctx: AppContext = Depends(get_ctx),
+) -> WhatIfOut:
+    """Фича C: пересчёт чувствительности к ставке и курсу для путей влияния инсайта, без LLM."""
+    return what_if(ctx, get_insight(ctx, insight_id, s.company_id).insight, body)

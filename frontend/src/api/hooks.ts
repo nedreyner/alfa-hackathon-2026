@@ -1,4 +1,10 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { api, isApiError, unwrap } from './client';
 import type { AnalyzeInput, FeedbackIn, OverridesUpdate, Role } from './types';
@@ -244,5 +250,24 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: async (body: { product_id: string; insight_id?: string | null; comment?: string | null }) =>
       unwrap(await api.POST('/api/leads', { body: { ...body, confirm: true } })),
+  });
+}
+
+/** Фича C «Что если»: детерминированный пересчёт без LLM, ответ быстрый — держим прошлое значение при сдвиге ползунка. */
+export function useWhatIf(
+  id: string,
+  params: { rate_delta_pp: number; fx_delta_pct: number; currency: string | null },
+) {
+  return useQuery({
+    queryKey: ['what-if', id, params.rate_delta_pp, params.fx_delta_pct, params.currency],
+    retry: notRetry4xx,
+    placeholderData: keepPreviousData,
+    queryFn: async () =>
+      unwrap(
+        await api.POST('/api/insights/{insight_id}/what-if', {
+          params: { path: { insight_id: id } },
+          body: params,
+        }),
+      ),
   });
 }

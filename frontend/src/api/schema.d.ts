@@ -269,6 +269,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/insights/{insight_id}/what-if': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Insight What If
+     * @description Фича C: пересчёт чувствительности к ставке и курсу для путей влияния инсайта, без LLM.
+     */
+    post: operations['insight_what_if'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/sources/{source_id}': {
     parameters: {
       query?: never;
@@ -1122,6 +1142,29 @@ export interface components {
        */
       created_at: string;
     };
+    /** FxScenario */
+    FxScenario: {
+      /** Currency */
+      currency: string;
+      /** Rate Now */
+      rate_now: number | null;
+      /** Rate New */
+      rate_new: number | null;
+      /**
+       * Direction
+       * @enum {string}
+       */
+      direction: 'import' | 'export' | 'mixed';
+      /** Delta Rub Per Billion */
+      delta_rub_per_billion: number;
+      /**
+       * Level
+       * @enum {string}
+       */
+      level: 'low' | 'medium' | 'high';
+      /** Text */
+      text: string;
+    };
     /** GenerateResponse */
     GenerateResponse: {
       /**
@@ -1474,6 +1517,26 @@ export interface components {
       ndcg5?: number | null;
       /** P5 */
       p5?: number | null;
+    };
+    /** RateScenario */
+    RateScenario: {
+      /** Key Rate Now */
+      key_rate_now: number | null;
+      /** Key Rate New */
+      key_rate_new: number | null;
+      /** Debt Rub */
+      debt_rub: number | null;
+      /** Delta Rub Year */
+      delta_rub_year: number | null;
+      /** Share Of Revenue */
+      share_of_revenue: number | null;
+      /**
+       * Level
+       * @enum {string}
+       */
+      level: 'low' | 'medium' | 'high';
+      /** Text */
+      text: string;
     };
     /** ReadyResponse */
     ReadyResponse: {
@@ -1830,6 +1893,45 @@ export interface components {
       facts: components['schemas']['Claim'][];
       /** Assumptions */
       assumptions?: components['schemas']['Claim'][];
+    };
+    /** WhatIfIn */
+    WhatIfIn: {
+      /**
+       * Rate Delta Pp
+       * @description Изменение ставки, п. п.
+       * @default 0
+       */
+      rate_delta_pp: number;
+      /**
+       * Fx Delta Pct
+       * @description Изменение курса, %
+       * @default 0
+       */
+      fx_delta_pct: number;
+      /**
+       * Currency
+       * @description Валюта сценария курса, например CNY
+       */
+      currency?: string | null;
+    };
+    /** WhatIfOut */
+    WhatIfOut: {
+      /** Rate Available */
+      rate_available: boolean;
+      /** Currencies */
+      currencies: string[];
+      rate?: components['schemas']['RateScenario'] | null;
+      fx?: components['schemas']['FxScenario'] | null;
+      /**
+       * Label
+       * @default Вывод ИИ: оценка
+       */
+      label: string;
+      /**
+       * Disclaimer
+       * @default Арифметическая оценка по данным профиля: без учёта хеджирования, фиксированных ставок и пересмотра цен.
+       */
+      disclaimer: string;
     };
     /** WhyItMatters */
     WhyItMatters: {
@@ -2375,6 +2477,41 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['FeedbackOut'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  insight_what_if: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        insight_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WhatIfIn'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WhatIfOut'];
         };
       };
       /** @description Validation Error */

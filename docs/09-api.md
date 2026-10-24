@@ -48,6 +48,7 @@ class SessionData(BaseModel):          # содержимое cookie (подпи
 | POST | `/api/events/{event_id}/insight` | Сгенерировать по событию | `GenerateResponse` (200 — готов, 202 — запущен) |
 | GET | `/api/insights/{insight_id}/trace` | Трасса | `TraceResponse` |
 | POST | `/api/insights/{insight_id}/feedback` | Оценка | `FeedbackOut` |
+| POST | `/api/insights/{insight_id}/what-if` | Фича C «Что если»: `WhatIfIn {rate_delta_pp ∈ [−2; 2], fx_delta_pct ∈ [−10; 10], currency?}` → пересчёт без LLM по путям влияния инсайта (`services/what_if.py`) | `WhatIfOut` |
 | POST | `/api/analyze` | Фича B | 202 `RunRef` |
 | GET | `/api/analyze/history?limit=` | Мои проверки | `list[AnalyzeHistoryItem]` |
 | GET | `/api/runs/{run_id}` | Статус прогона | `RunInfo` |
