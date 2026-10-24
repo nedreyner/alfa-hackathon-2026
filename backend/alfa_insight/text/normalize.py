@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import re
 import unicodedata
+from functools import lru_cache
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 _TAGS = re.compile(r"<[^>]+>")
@@ -77,8 +78,11 @@ def normalize_url(url: str | None) -> str:
     return urlunsplit((scheme, host, path, urlencode(query), ""))
 
 
+@lru_cache(maxsize=4096)
+def _lower_name(name: str) -> str:
+    return " ".join(w if sum(ch.isupper() for ch in w) >= 2 else w.lower() for w in name.split(" "))
+
+
 def lower_name(name: str | None) -> str:
     """Название в середину фразы: строчные буквы, кроме аббревиатур (ЦБ, ВЭД, США)."""
-    if not name:
-        return ""
-    return " ".join(w if sum(ch.isupper() for ch in w) >= 2 else w.lower() for w in name.split(" "))
+    return _lower_name(name) if name else ""

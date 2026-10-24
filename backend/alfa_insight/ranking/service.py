@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from alfa_insight.data.models import CompanyProfile
 from alfa_insight.data.profiles import ProfileStore
 from alfa_insight.db.sqlite import SqliteDB
-from alfa_insight.ranking.chain import chain_preview, compute_exposure
+from alfa_insight.ranking.chain import BlendedShare, blended_shares, chain_preview, compute_exposure
 from alfa_insight.ranking.models import ROLES, EventSignal, RankingConfig, RankResult, Role
 from alfa_insight.ranking.scorer import impact_level, score_exposure
 from alfa_insight.reference.taxonomy import Taxonomy
@@ -26,10 +26,15 @@ class RankingService:
         self.store = RankingStore(db)
 
     def rank_one(
-        self, event: EventSignal, profile: CompanyProfile, role: Role, now: datetime | None = None
+        self,
+        event: EventSignal,
+        profile: CompanyProfile,
+        role: Role,
+        now: datetime | None = None,
+        shares: dict[str, dict[str, BlendedShare]] | None = None,
     ) -> RankResult:
         now = now or utc_now()
-        exposure = compute_exposure(event, profile, role, self.cfg, self.tax)
+        exposure = compute_exposure(event, profile, role, self.cfg, self.tax, shares=shares)
         comp = score_exposure(exposure, event, profile, role, self.cfg, now)
         return RankResult(
             exposure=exposure,
@@ -48,12 +53,14 @@ class RankingService:
         rows = []
         drop = []
         for profile in profiles:
+            shares = {side: blended_shares(profile, self.tax, side) for side in ("supply", "demand")}  # type: ignore[arg-type]
             for event in events:
                 if event.visibility == "private" and event.owner_company_id != profile.company_id:
                     continue
                 for role in ROLES:
-                    res = self.rank_one(event, profile, role, now)
-                    if res.exposure.relevance < self.cfg.min_relevance_to_store:
+                    res = self.rank_one(event, profile, role, now, shares)
+                    weak = res.exposure.relevance < self.cfg.min_relevance_to_store
+                    if weak and event.visibility != "private":  # приватное событие фичи B храним всегда
                         drop.append((profile.company_id, event.event_id, role))
                         continue
                     rows.append(
@@ -88,6 +95,17 @@ class RankingService:
         events += self.events.load_signals(private_ids)
         self.store.delete_company(company_id, keep_event_ids={e.event_id for e in events})
         return self._rank(events, [self.profiles.get(company_id)], now)
+
+    def rank_private(
+        self, event_id: int, company_id: str, *, role: Role = "cfo", now: datetime | None = None
+    ) -> RankResult | None:
+        """Событие фичи B: строки `rankings` компании для трёх ролей; результат — для `role`."""
+        signals = self.events.load_signals([event_id])
+        if not signals:
+            return None
+        profile = self.profiles.get(company_id)
+        self._rank(signals, [profile], now or utc_now())
+        return self.rank_one(signals[0], profile, role, now)
 
     def rank_events(self, event_ids: list[int], *, now: datetime | None = None) -> int:
         now = now or utc_now()

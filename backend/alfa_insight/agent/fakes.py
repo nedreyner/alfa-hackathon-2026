@@ -151,3 +151,51 @@ def _claims(d: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
     out += [(f"actions[{i}].claim", x["claim"]) for i, x in enumerate(d["actions"])]
     out += [(f"bank_view.claims[{i}]", c) for i, c in enumerate(d["bank_view"]["claims"])]
     return out
+
+
+# ── агент (agentic): раунд 1 — план и инструменты, раунд 2 — submit_insight ──
+_KIND_LABELS = {"news": "Новость", "alfa": "Аналитика Альфа-Банка", "cbr": "Данные ЦБ",
+                "client_data": "Ваши данные", "user_input": "Ваш текст"}  # fmt: skip
+
+
+def _tool_evidence(req: LLMRequest) -> str:
+    out = []
+    for m in req.messages:
+        if m.role != "tool" or not isinstance(m.content, str):
+            continue
+        try:
+            body = json.loads(m.content)
+        except ValueError:
+            continue
+        for e in body.get("evidence", []):
+            out.append(f"[{e['eid']}] {_KIND_LABELS.get(e['kind'], e['kind'])} · {e['title']}\n{e['text']}\n")
+    return "\n".join(out)
+
+
+@fake_handler("agent")
+def fake_agent(req: LLMRequest, payload: dict[str, Any]) -> Any:
+    from alfa_insight.llm.fake import FakeReply
+
+    user = _user(req)
+    tool_msgs = [m for m in req.messages if m.role == "tool"]
+    forced = isinstance(payload.get("tool_choice"), dict)
+    draft = fake_draft_from_prompt(_tool_evidence(req) + "\n" + user)
+    if forced:
+        return draft
+    if "[[NOSUBMIT]]" in user:
+        return FakeReply(content="Думаю над ответом.")
+    if not tool_msgs:
+        lead = next(
+            (e["title"] for e in _evidence(user) if e["label"] in ("Новость", "Ваш текст")), "событие"
+        )
+        return FakeReply(
+            content="1. Проверю позицию аналитиков банка.\n2. Уточню ключевую ставку.",
+            tool_calls=[
+                ("search_alfa_research", {"query": lead[:200]}),
+                ("get_macro", {"indicator": "key_rate"}),
+            ],
+        )
+    rejected = any("Неверные аргументы" in (m.content or "") for m in tool_msgs if isinstance(m.content, str))
+    if "[[BADSUBMIT]]" in user and not rejected:
+        return FakeReply(tool_calls=[("submit_insight", {"headline": "x"})])
+    return FakeReply(tool_calls=[("submit_insight", draft)])

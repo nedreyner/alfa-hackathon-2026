@@ -64,9 +64,9 @@ def test_region_bonus_exact_match() -> None:
 
 
 def test_rank_all_on_seed(seeded_ctx) -> None:  # type: ignore[no-untyped-def]
-    t = time.monotonic()
+    t = time.process_time()  # CPU этого процесса: не зависит от фоновой нагрузки на машине
     n = seeded_ctx.ranking.rank_all()
-    elapsed = time.monotonic() - t
+    elapsed = time.process_time() - t
     assert n > 0 and elapsed < 5.0, elapsed
     store = RankingStore(seeded_ctx.db)
     for company in seeded_ctx.demo.companies:

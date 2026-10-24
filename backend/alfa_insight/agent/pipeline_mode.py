@@ -50,28 +50,34 @@ async def _tool(ctx: AgentContext, name: str, **args: Any) -> ToolResult:
     return await execute_tool_call(ctx, ToolCall(id=ctx_id, name=name, arguments=args))
 
 
-async def collect(ctx: AgentContext) -> dict[str, Any]:
-    """Шаги 1–7 §6: последовательно событие, профиль, пути; затем параллельно остальное."""
+async def collect_base(
+    ctx: AgentContext, *, plan_text: str = "Пакетный режим: фиксированный план"
+) -> dict[str, Any]:
+    """Шаги 1–3 §6 (общие для обоих режимов): событие, профиль, пути влияния."""
     assert ctx.event_id is not None
     ctx.trace.phase("plan", "План")
-    ctx.trace.emit("plan", "plan", "Пакетный режим: фиксированный план",
-                   payload={"text": "Пакетный режим: фиксированный план", "steps": PIPELINE_STEPS})  # fmt: skip
+    ctx.trace.emit("plan", "plan", plan_text, payload={"text": plan_text, "steps": PIPELINE_STEPS[:3]})
     ctx.trace.phase("tools", "Сбор данных")
     ev = await _tool(ctx, "get_event", event_id=ctx.event_id)
     if not ev.ok:
         raise RunFailed(ev.error or "Событие недоступно", code="internal")
     await _tool(ctx, "get_company_profile")
     await _tool(ctx, "compute_exposure", event_id=ctx.event_id)
+    return ev.data
+
+
+async def collect_rest(ctx: AgentContext, event: dict[str, Any]) -> None:
+    """Шаги 4–7 §6 параллельно: аналитика банка, ставка и курсы из путей, контрагенты главного пути."""
     paths = ctx.exposure.paths if ctx.exposure else []
     top = paths[:3]
     industries = list(dict.fromkeys(p.industry_id for p in top if p.industry_id))
     factors = list(dict.fromkeys(p.factor_id for p in top if p.factor_id))
     names = [p.industry_name or p.factor_name or "" for p in top]
-    query = " ".join([ev.data.get("title", ""), ev.data.get("summary", ""), *names])[:200]
+    query = " ".join([event.get("title", ""), event.get("summary", ""), *names])[:200]
     jobs = [
         _tool(ctx, "search_alfa_research", query=query, industry_ids=industries, factor_ids=factors, limit=4)
     ]
-    event_factors = {f["factor_id"] for f in ev.data.get("factors", [])}
+    event_factors = {f["factor_id"] for f in event.get("factors", [])}
     path_factors = {p.factor_id for p in paths if p.factor_id}
     if (path_factors | event_factors) & RATE_FACTORS:
         jobs.append(_tool(ctx, "get_macro", indicator="key_rate"))
@@ -89,7 +95,6 @@ async def collect(ctx: AgentContext) -> dict[str, Any]:
         )
     await asyncio.gather(*jobs)
     ctx.trace.emit("phase.completed", "tools", "Данные собраны", payload={"evidence": len(ctx.evidence)})
-    return ev.data
 
 
 def expected_impact(ctx: AgentContext) -> ImpactLevel | None:
@@ -127,9 +132,17 @@ def draft_messages(ctx: AgentContext, candidates: list[ProductCandidate]) -> tup
 
 
 async def run_pipeline(ctx: AgentContext) -> Insight:
-    await collect(ctx)
+    event = await collect_base(ctx)
     candidates = ctx.app.products.match(ctx.exposure, ctx.profile, ctx.role) if ctx.exposure else []
+    return await draft_and_verify(ctx, candidates, event=event)
 
+
+async def draft_and_verify(
+    ctx: AgentContext, candidates: list[ProductCandidate], *, event: dict[str, Any] | None = None
+) -> Insight:
+    """Шаги 4–7 (если передано событие), черновик, проверка, доработка, финализация."""
+    if event is not None:
+        await collect_rest(ctx, event)
     ctx.trace.phase("draft", "Пишу разбор")
     messages, version = draft_messages(ctx, candidates)
     res = await ctx.app.router.structured(
@@ -154,7 +167,21 @@ async def run_pipeline(ctx: AgentContext) -> Insight:
         attempts += 1
         ctx.trace.phase("verify", "Проверяю исправления")
         draft, report = await verify(ctx, draft, inp, attempt=attempts, exclude_families=exclude)
+    return finish(
+        ctx, draft, report, attempts=attempts, model=model, prompt_version=insight_prompt_version(ctx)
+    )
 
+
+def finish(
+    ctx: AgentContext,
+    draft: InsightDraft,
+    report: VerificationReport,
+    *,
+    attempts: int,
+    model: str,
+    prompt_version: str,
+) -> Insight:
+    """Деградация при непройденной проверке и финализация (§9.5, §10)."""
     ctx.trace.phase("finalize", "Оформляю результат")
     if report.passed:
         status, removed, share, warnings = "published", 0, report.supported_share, []
@@ -172,7 +199,7 @@ async def run_pipeline(ctx: AgentContext) -> Insight:
         ctx,
         FinalizeInput(
             draft=draft, report=report, status=status, removed_claims=removed, supported_share=share,  # type: ignore[arg-type]
-            warnings=warnings, attempts=attempts, model=model, prompt_version=insight_prompt_version(ctx),
+            warnings=warnings, attempts=attempts, model=model, prompt_version=prompt_version,
         ),
     )  # fmt: skip
 

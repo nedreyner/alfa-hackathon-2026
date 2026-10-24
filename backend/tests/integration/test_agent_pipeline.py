@@ -94,7 +94,7 @@ def test_timeout_budget_and_recovery(seeded_ctx, monkeypatch: pytest.MonkeyPatch
     runner = JobRunner(app)
     runs = RunStore(app.db)
 
-    async def slow(ctx):  # type: ignore[no-untyped-def]
+    async def slow(ctx, **kw):  # type: ignore[no-untyped-def]
         await asyncio.sleep(5)
 
     monkeypatch.setattr("alfa_insight.services.jobs.run_agent", slow)
@@ -104,7 +104,7 @@ def test_timeout_budget_and_recovery(seeded_ctx, monkeypatch: pytest.MonkeyPatch
     assert run is not None and (run.status, run.error_code) == ("failed", "timeout")
     assert runs.trace(run.id)[-1].type == "run.failed"
 
-    async def broke(ctx):  # type: ignore[no-untyped-def]
+    async def broke(ctx, **kw):  # type: ignore[no-untyped-def]
         raise BudgetExceeded("day")
 
     monkeypatch.setattr("alfa_insight.services.jobs.run_agent", broke)

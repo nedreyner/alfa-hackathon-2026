@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 from alfa_insight.agent.context import AgentContext, AgentLimits
+from alfa_insight.agent.intake import AnalyzeInput
 from alfa_insight.agent.runtime import run_agent
 from alfa_insight.appctx import AppContext
 from alfa_insight.errors import (
@@ -69,6 +70,7 @@ class JobRunner:
     _active: int = 0
     _tasks: set[asyncio.Task[RunRow]] = field(default_factory=set)
     _sem: asyncio.Semaphore | None = None
+    fetch_options: dict[str, Any] = field(default_factory=dict)  # тесты фичи B: transport, resolver
 
     @property
     def runs(self) -> RunStore:
@@ -111,6 +113,19 @@ class JobRunner:
         self.spawn(run_id)
         return StartResult(status="started", run_id=run_id)
 
+    def start_analyze(
+        self, company_id: str, role: str, inp: AnalyzeInput, *, session_id: str | None = None
+    ) -> str:
+        """POST /api/analyze: прогон kind=analyze, mode=agentic; событие появится по ходу intake."""
+        if self._active >= self.app.settings.agent_max_concurrent_runs:
+            raise Busy("Сейчас идёт много разборов, попробуйте через минуту")
+        run_id = self.runs.create(
+            kind="analyze", mode="agentic", company_id=company_id, role=role, session_id=session_id,
+            priority="interactive", input=inp.model_dump(mode="json", exclude_none=True),
+        )  # fmt: skip
+        self.spawn(run_id)
+        return run_id
+
     def spawn(self, run_id: str) -> asyncio.Task[RunRow]:
         task = asyncio.get_running_loop().create_task(self.execute(run_id))
         self._tasks.add(task)
@@ -135,7 +150,11 @@ class JobRunner:
                     role=(run.role or "cfo"), event_id=run.event_id, priority=run.priority,  # type: ignore[arg-type]
                     limits=AgentLimits.from_app(self.app).model_copy(update={"timeout_s": int(self.timeout_for(run.kind))}),
                 )  # fmt: skip
-                await asyncio.wait_for(run_agent(ctx), timeout=self.timeout_for(run.kind))
+                analyze = AnalyzeInput.model_validate(run.input) if run.kind == "analyze" else None
+                await asyncio.wait_for(
+                    run_agent(ctx, analyze=analyze, fetch_options=self.fetch_options),
+                    timeout=self.timeout_for(run.kind),
+                )
         except Exception as exc:
             code = error_code(exc)
             if code == "internal":

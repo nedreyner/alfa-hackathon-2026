@@ -77,7 +77,9 @@ def compute_exposure(
     cfg: RankingConfig,
     tax: Taxonomy,
     counterparties: CounterpartyReader | None = None,
+    shares: dict[str, dict[str, BlendedShare]] | None = None,
 ) -> Exposure:
+    """`shares` — заранее посчитанные `blended_shares` профиля (пакетное ранжирование)."""
     paths: list[ChainPath] = []
     cap = cfg.max_path_contribution
     feature_keys = profile.feature_keys()
@@ -110,9 +112,9 @@ def compute_exposure(
 
     # supply / demand: отрасли-контрагенты
     for side, direction_db, fprefix in (("supply", "out", "suppliers"), ("demand", "in", "buyers")):
-        shares = blended_shares(profile, tax, side)  # type: ignore[arg-type]
+        side_shares = shares[side] if shares is not None else blended_shares(profile, tax, side)  # type: ignore[arg-type]
         for tag in event.industries:
-            share = shares.get(tag.industry_id)
+            share = side_shares.get(tag.industry_id)
             if share is None or share.value < cfg.min_share:
                 continue
             s = tag.impact * tag.confidence
