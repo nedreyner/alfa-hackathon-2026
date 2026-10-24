@@ -35,7 +35,9 @@ def _simplify(node: Any) -> Any:
         return [_simplify(x) for x in node]
     if not isinstance(node, dict):
         return node
-    out = {k: _simplify(v) for k, v in node.items() if k not in _DROP_KEYS}
+    out = {k: _simplify(v) for k, v in node.items() if k not in _DROP_KEYS and k != "properties"}
+    if isinstance(node.get("properties"), dict):  # имена полей (в т.ч. `title`) не трогаем
+        out["properties"] = {name: _simplify(sub) for name, sub in node["properties"].items()}
     if "default" in out and out["default"] is None:
         out.pop("default")
     for key in ("anyOf", "oneOf"):

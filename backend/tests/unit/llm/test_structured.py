@@ -143,3 +143,13 @@ async def test_fake_mode_router(settings: Settings, tmp_path: Path) -> None:
     )
     assert res.value.choice == "x" and res.raw.model_key == "fake" and res.strategy_used == "tool_call"
     assert db.scalar("SELECT count(*) FROM llm_cache") == 0  # в fake кеш не используется
+
+
+def test_to_llm_schema_keeps_title_field() -> None:
+    class Card(BaseModel):
+        title: str = Field(max_length=80)
+        sub: Claim | None = None
+
+    schema = to_llm_schema(Card)
+    assert schema["properties"]["title"] == {"type": "string", "maxLength": 80}
+    assert schema["required"] == ["title"] and "title" not in schema["properties"]["sub"]

@@ -1,0 +1,112 @@
+{
+  "id": "ins_01JB6Q2Z8K3V7R4M5N6P7Q8R9S",
+  "company_id": "SYN-DEMO-02",
+  "status": "published",
+  "headline": "Арматура дорожает: себестоимость ваших объектов может вырасти",
+  "why_you": "34% ваших закупок — металлургия",
+  "direction": "risk",
+  "impact_level": "high",
+  "what_happened": {
+    "facts": [
+      {"text": "Крупные металлурги поднимают отпускные цены на арматуру на 8% с 1 ноября.", "type": "fact", "refs": ["news:4821", "news:4830"]},
+      {"text": "Минпромторг предложил повысить ввозные пошлины на арматуру до 15%.", "type": "fact", "refs": ["news:4799"]}
+    ],
+    "assumptions": [
+      {"text": "Повышение цен, вероятно, затронет контракты с плавающей ценой уже в ноябре.", "type": "ai", "refs": [], "confidence": "medium"}
+    ]
+  },
+  "why_it_matters": {
+    "summary": {"text": "Металлургия — 34% ваших закупок, рост цен на 8% увеличит затраты на материалы.", "type": "fact", "refs": ["data:SYN-DEMO-02:supply:metallurgy", "news:4821"]},
+    "client_features_used": ["suppliers.metallurgy", "industry.main"],
+    "chain_ids": ["P1", "P2"]
+  },
+  "consequences": [
+    {
+      "kind": "risk",
+      "title": "Рост себестоимости объектов",
+      "claim": {"text": "Себестоимость строительства может вырасти примерно на 2–3% при текущей доле металла.", "type": "ai", "refs": ["data:SYN-DEMO-02:exposure:123:supply.metallurgy"], "confidence": "medium"},
+      "probability": "high",
+      "impact": "medium",
+      "horizon": "weeks"
+    },
+    {
+      "kind": "opportunity",
+      "title": "Закупка впрок до повышения",
+      "claim": {"text": "Закупка арматуры до 1 ноября позволит зафиксировать текущую цену на часть объёма.", "type": "ai", "refs": ["news:4821"], "confidence": "medium"},
+      "probability": "medium",
+      "impact": "medium",
+      "horizon": "days"
+    }
+  ],
+  "actions": [
+    {
+      "title": "Пересмотреть закупочный план на ноябрь",
+      "claim": {"text": "Сверить график поставок металла и перенести часть закупок на октябрь.", "type": "ai", "refs": ["news:4821"], "confidence": "high"},
+      "owner_role": "cfo",
+      "urgency": "this_week",
+      "product_id": null
+    },
+    {
+      "title": "Профинансировать закупку впрок",
+      "claim": {"text": "Кредитная линия на пополнение оборотных средств покроет авансовую закупку металла.", "type": "ai", "refs": ["data:SYN-DEMO-02:profile"], "confidence": "medium"},
+      "owner_role": "treasurer",
+      "urgency": "this_week",
+      "product_id": "working_capital_line"
+    }
+  ],
+  "bank_view": {
+    "available": true,
+    "claims": [
+      {"text": "Аналитики Альфа-Банка ожидают роста цен на сталь в четвёртом квартале на фоне ремонтов.", "type": "bank", "refs": ["alfa:metals-2026-10:p3:c1"]}
+    ],
+    "alignment": "supports"
+  },
+  "event": {
+    "id": 123,
+    "title": "Металлурги поднимают цены на арматуру на 8% с ноября",
+    "summary": "Крупнейшие производители арматуры повышают отпускные цены на 8% с 1 ноября.",
+    "event_type": "commodity_prices",
+    "importance": 4,
+    "first_seen_at": "2026-10-22T06:10:00Z",
+    "last_seen_at": "2026-10-22T09:40:00Z",
+    "publishers": ["Интерфакс", "Коммерсантъ"],
+    "news_count": 3,
+    "visibility": "public",
+    "injection_suspected": false
+  },
+  "chain": {
+    "nodes": [
+      {"id": "event", "kind": "event", "label": "Металлурги поднимают цены на арматуру на 8% с ноября", "x": 0, "y": 0},
+      {"id": "P1-driver", "kind": "industry", "label": "Металлургия: рост цен", "x": 280, "y": 0},
+      {"id": "P1-exposure", "kind": "exposure", "label": "34% ваших закупок — металлургия", "sublabel": "вклад 0.39", "x": 560, "y": 0, "source_ids": ["data:SYN-DEMO-02:supply:metallurgy"]},
+      {"id": "P1-consequence", "kind": "consequence", "label": "Рост закупочных цен → себестоимость", "sublabel": "риск", "direction": "risk", "x": 840, "y": 0}
+    ],
+    "edges": [
+      {"id": "P1-e1", "source": "event", "target": "P1-driver", "weight": 0.39},
+      {"id": "P1-e2", "source": "P1-driver", "target": "P1-exposure", "weight": 0.39},
+      {"id": "P1-e3", "source": "P1-exposure", "target": "P1-consequence", "label": "P1", "weight": 0.39}
+    ]
+  },
+  "chain_preview": "Металлурги поднимают цены на арматуру → 34% ваших закупок — металлургия → риск: рост закупочных цен → себестоимость",
+  "sources": [
+    {"id": "news:4821", "kind": "news", "title": "Металлурги поднимут цены на арматуру на 8%", "publisher": "Интерфакс", "url": "https://www.interfax.ru/business/1000001", "published_at": "2026-10-22T06:10:00Z"},
+    {"id": "news:4830", "kind": "news", "title": "Арматура подорожает с ноября", "publisher": "Коммерсантъ", "url": "https://www.kommersant.ru/doc/1000002", "published_at": "2026-10-22T09:40:00Z"},
+    {"id": "news:4799", "kind": "news", "title": "Минпромторг предложил поднять пошлины на арматуру", "publisher": "ТАСС", "url": "https://tass.ru/ekonomika/1000003", "published_at": "2026-10-21T12:00:00Z"},
+    {"id": "data:SYN-DEMO-02:supply:metallurgy", "kind": "client_data", "title": "Ваши закупки: металлургия", "publisher": null, "url": null, "published_at": null},
+    {"id": "data:SYN-DEMO-02:exposure:123:supply.metallurgy", "kind": "client_data", "title": "Путь влияния: закупки — металлургия", "publisher": null, "url": null, "published_at": null},
+    {"id": "data:SYN-DEMO-02:profile", "kind": "client_data", "title": "Профиль компании", "publisher": null, "url": null, "published_at": null},
+    {"id": "alfa:metals-2026-10:p3:c1", "kind": "alfa", "title": "Металлы: обзор рынка, октябрь 2026", "publisher": "Альфа-Банк", "url": null, "published_at": "2026-10-10T00:00:00Z"}
+  ],
+  "products": [
+    {"product_id": "working_capital_line", "name": "Кредитная линия на пополнение оборотных средств", "pitch": "Закупить металл до повышения цен", "url": null, "action_index": 1}
+  ],
+  "confidence": {"value": 0.81, "level": "high", "reasons": ["2 независимых издания", "данные о платежах покрывают 90%", "проверка: 9 из 10 утверждений подтверждены"]},
+  "verification": {"passed": true, "supported_share": 0.9, "attempts": 1, "removed_claims": 0, "warnings": [], "llm_skipped": false},
+  "role_generated_for": "cfo",
+  "prompt_version": "draft@1+verify@1",
+  "profile_version": "p_3f2a",
+  "model": "deepseek",
+  "trace_id": "run_01JB6Q2Y0A1B2C3D4E5F6G7H8J",
+  "cost_rub": 0.42,
+  "created_at": "2026-10-22T10:05:00Z"
+}
