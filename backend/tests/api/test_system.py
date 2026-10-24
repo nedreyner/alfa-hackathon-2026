@@ -132,3 +132,16 @@ def test_operation_ids(client: TestClient) -> None:
         "delete_session",
         "reference",
     } <= ops
+
+
+def test_openapi_committed_and_in_sync() -> None:
+    """frontend/openapi.json совпадает со схемой приложения (`make openapi` после изменения API)."""
+    import json
+
+    from tests.api.conftest import REPO_ROOT
+
+    schema = create_app().openapi()
+    ops = [op["operationId"] for path in schema["paths"].values() for op in path.values()]
+    assert len(ops) == len(set(ops))
+    committed = json.loads((REPO_ROOT / "frontend" / "openapi.json").read_text(encoding="utf-8"))
+    assert committed == json.loads(json.dumps(schema, ensure_ascii=False)), "запустите make openapi"

@@ -42,11 +42,43 @@ def _stub_group(name: str, help_text: str) -> typer.Typer:
 GROUPS: dict[str, str] = {
     "eval": "Офлайн-оценка качества.",
     "demo": "Демо-кураторство и заморозка кеша.",
-    "api": "API: OpenAPI-схема и служебные команды.",
 }
 
 for _name, _help in GROUPS.items():
     app.add_typer(_stub_group(_name, _help), name=_name)
+
+
+api_app = typer.Typer(help="API: OpenAPI-схема и служебные команды.", no_args_is_help=True)
+app.add_typer(api_app, name="api")
+
+
+@api_app.command("openapi")
+def api_openapi(
+    out: str = typer.Option("../frontend/openapi.json", "--out", help="Куда записать схему"),
+) -> None:
+    """Выгрузить OpenAPI-схему без запуска сервера."""
+    import json
+    from pathlib import Path
+
+    from alfa_insight.api.app import create_app
+
+    schema = create_app().openapi()
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    typer.echo(
+        f"{path}: путей {len(schema.get('paths', {}))}, схем {len(schema.get('components', {}).get('schemas', {}))}"
+    )
+
+
+@api_app.command("serve")
+def api_serve(
+    host: str = typer.Option("0.0.0.0", "--host"), port: int = typer.Option(8000, "--port")
+) -> None:
+    """Запустить API (uvicorn)."""
+    import uvicorn
+
+    uvicorn.run("alfa_insight.api.app:create_app", factory=True, host=host, port=port, proxy_headers=True)
 
 
 app.add_typer(data_app, name="data")
