@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 MSK = ZoneInfo("Europe/Moscow")
@@ -27,8 +27,14 @@ def parse_dt(value: str) -> datetime:
     return ensure_utc(datetime.fromisoformat(text))
 
 
+# Шлюз хакатона сбрасывает дневной бюджет в 03:00 МСК (инструкция организаторов), а не в полночь
+BUDGET_RESET_HOUR = 3
+
+
 def budget_day(dt: datetime | None = None, tz: str = "Europe/Moscow") -> date:
-    return ensure_utc(dt or utc_now()).astimezone(ZoneInfo(tz)).date()
+    """Бюджетные сутки: с 03:00 до 03:00 по `tz`; ночь до 03:00 относится к предыдущему дню."""
+    local = ensure_utc(dt or utc_now()).astimezone(ZoneInfo(tz))
+    return (local - timedelta(hours=BUDGET_RESET_HOUR)).date()
 
 
 def msk(dt: datetime) -> datetime:

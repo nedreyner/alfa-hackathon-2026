@@ -33,8 +33,10 @@ def test_prod_requires_session_secret() -> None:
 
 
 def test_budget_day_msk_boundary() -> None:
-    assert budget_day(parse_dt("2026-10-22T21:30:00Z")).isoformat() == "2026-10-23"
-    assert budget_day(parse_dt("2026-10-22T20:59:59Z")).isoformat() == "2026-10-22"
+    """Бюджет шлюза сбрасывается в 03:00 МСК (00:00 UTC): ночь до трёх — ещё прошлые сутки."""
+    assert budget_day(parse_dt("2026-10-22T21:30:00Z")).isoformat() == "2026-10-22"  # 00:30 МСК
+    assert budget_day(parse_dt("2026-10-22T23:59:59Z")).isoformat() == "2026-10-22"  # 02:59 МСК
+    assert budget_day(parse_dt("2026-10-23T00:00:00Z")).isoformat() == "2026-10-23"  # 03:00 МСК
 
 
 def test_iso_roundtrip() -> None:
