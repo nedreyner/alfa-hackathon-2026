@@ -8,7 +8,7 @@ import styles from './TopBar.module.css';
 const LINKS = [
   { to: '/feed', label: 'Лента' },
   { to: '/analyze', label: 'Проверить новость' },
-  { to: '/profile', label: 'Что мы о вас знаем' },
+  { to: '/profile', label: 'Что мы знаем о вас' },
   { to: '/quality', label: 'Качество' },
 ];
 

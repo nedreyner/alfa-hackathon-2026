@@ -1,0 +1,46 @@
+.claim {
+  display: inline;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 160ms var(--ai-ease);
+}
+
+.claim:hover,
+.claim:focus-visible {
+  background: var(--ai-bg-subtle);
+}
+
+.noRefs {
+  cursor: default;
+}
+
+.noRefs:hover {
+  background: transparent;
+}
+
+.label {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+.fact {
+  border: 1px solid var(--ai-border);
+  color: var(--ai-text-secondary);
+}
+
+.bank {
+  background: var(--ai-bank-bg);
+  color: var(--ai-accent);
+}
+
+.ai {
+  background: var(--ai-bg-subtle);
+  color: var(--ai-text-secondary);
+}

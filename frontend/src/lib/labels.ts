@@ -41,8 +41,8 @@ export const ROLE: Record<Role, string> = {
   owner: 'Собственник',
 };
 export const ROLE_SHORT: Record<Role, string> = {
-  cfo: 'CFO',
-  treasurer: 'Казначейство',
+  cfo: 'Финдиректор',
+  treasurer: 'Казначей',
   owner: 'Собственник',
 };
 export const ROLE_FOR: Record<Role, string> = {

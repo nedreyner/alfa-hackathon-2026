@@ -1,5 +1,5 @@
 import { Button } from '@alfalab/core-components/button';
-import { FilterTag } from '@alfalab/core-components/filter-tag';
+import { Tag } from '@alfalab/core-components/tag';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -8,7 +8,6 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { SkeletonCard } from '../components/common/SkeletonCard';
 import { InsightCard } from '../components/insight/InsightCard';
-import { RoleSwitcher } from '../components/layout/RoleSwitcher';
 import { sendUiEvent } from '../lib/telemetry';
 
 const FILTERS: { key: string; label: string; value: FeedFilters }[] = [
@@ -34,15 +33,21 @@ export default function FeedPage() {
       <p className="secondary" style={{ margin: '0 0 20px' }}>
         События отсортированы по силе влияния на вашу компанию{total ? ` · ${total} в ленте` : ''}
       </p>
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 20 }}>
+      <div className="row" style={{ marginBottom: 20 }}>
         <div className="row" role="group" aria-label="Фильтры">
           {FILTERS.map((f) => (
-            <FilterTag key={f.key} size={32} checked={filter === f.key} onClick={() => setFilter(f.key)}>
+            <Tag
+              key={f.key}
+              size={32}
+              shape="rounded"
+              view="filled"
+              checked={filter === f.key}
+              onClick={() => setFilter(f.key)}
+            >
               {f.label}
-            </FilterTag>
+            </Tag>
           ))}
         </div>
-        <RoleSwitcher compact />
       </div>
       {feed.isPending ? (
         <div className="stack">

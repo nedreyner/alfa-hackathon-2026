@@ -8,9 +8,9 @@
 }
 
 .inner {
-  max-width: 1120px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 10px 16px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -31,19 +31,21 @@
 
 .company {
   min-width: 0;
-  max-width: 240px;
+  max-width: 200px;
   padding-left: 16px;
   border-left: 1px solid var(--ai-border);
 }
 
 .nav {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .link {
+  white-space: nowrap;
   padding: 6px 10px;
   border-radius: 999px;
   text-decoration: none;
@@ -79,6 +81,12 @@
   cursor: pointer;
   font: inherit;
   font-size: 14px;
+}
+
+@media (max-width: 1360px) {
+  .company {
+    display: none;
+  }
 }
 
 @media (max-width: 720px) {

@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "id": "event",
+      "kind": "event",
+      "label": "Металлурги поднимают цены",
+      "x": 0,
+      "y": 0,
+      "source_ids": ["news:1"]
+    },
+    {
+      "id": "P1-driver",
+      "kind": "industry",
+      "label": "Металлургия: цены растут",
+      "x": 280,
+      "y": 0,
+      "source_ids": []
+    },
+    {
+      "id": "P1-exposure",
+      "kind": "exposure",
+      "label": "34% ваших закупок — металлургия",
+      "sublabel": "вклад 0.39",
+      "x": 560,
+      "y": 0,
+      "source_ids": ["data:C:supply:metallurgy"]
+    },
+    {
+      "id": "P1-consequence",
+      "kind": "consequence",
+      "label": "Рост закупочных цен",
+      "sublabel": "риск",
+      "direction": "risk",
+      "x": 840,
+      "y": 0,
+      "source_ids": []
+    }
+  ],
+  "edges": [
+    { "id": "P1-e1", "source": "event", "target": "P1-driver", "weight": 0.39 },
+    { "id": "P1-e2", "source": "P1-driver", "target": "P1-exposure", "weight": 0.39 },
+    { "id": "P1-e3", "source": "P1-exposure", "target": "P1-consequence", "label": "P1", "weight": 0.39 }
+  ]
+}
