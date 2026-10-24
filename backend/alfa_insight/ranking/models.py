@@ -80,6 +80,7 @@ class RankingConfig(BaseModel):
     channel_weights: dict[Channel, float]
     secondary_industry_weight: float = 0.5
     min_share: float = 0.02
+    second_level_decay: float = 0.5
     min_factor_exposure: float = 0.15
     max_path_contribution: float = 0.95
     direction_mixed_ratio: float = 0.25
@@ -127,6 +128,11 @@ class ChainPath(BaseModel):
     top_counterparties: list[CounterpartyBrief] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list)
     feature_keys: list[str] = Field(default_factory=list)
+    # Второй уровень цепочки поставок: событие → отрасль j → поставщики компании отрасли i (via) → компания
+    level: Literal[1, 2] = 1
+    via_industry_id: str | None = None
+    via_industry_name: str | None = None
+    via_share: float | None = None  # доля j в закупках отрасли i (типовая)
 
 
 class Exposure(BaseModel):
@@ -176,6 +182,7 @@ class ChainEdge(BaseModel):
     target: str
     label: str | None = None
     weight: float
+    dashed: bool = False  # второй уровень цепочки — пунктир
 
 
 class ChainGraph(BaseModel):

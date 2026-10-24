@@ -702,6 +702,11 @@ export interface components {
       label?: string | null;
       /** Weight */
       weight: number;
+      /**
+       * Dashed
+       * @default false
+       */
+      dashed: boolean;
     };
     /** ChainGraph */
     ChainGraph: {

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from alfa_insight.ranking.chain import build_graph, chain_preview, compute_exposure
-from alfa_insight.ranking.effects import combine
+from alfa_insight.ranking.effects import cell, combine
 
 from .helpers import CFG, TAX, event, example_12, profile
 
@@ -104,3 +104,32 @@ def test_graph_layout() -> None:
     exp_node = next(n for n in g.nodes if n.id == "P1-exposure")
     assert (exp_node.x, exp_node.y, exp_node.source_ids) == (560, 0, ["E4"])
     assert next(n for n in g.nodes if n.id == "P2-consequence").direction == "risk"
+
+
+def test_second_level_supply() -> None:
+    """Руда дорожает → металлурги (34% закупок застройщика) → застройщик: путь второго уровня с затуханием."""
+    from alfa_insight.ranking.chain import build_graph, path_link
+
+    p, _ = example_12()
+    ore = event(
+        title="Железная руда подорожала на 12%", industries=[("mining_metal_ores", "prices_up", 1.0, 1.0)]
+    )
+    exp = compute_exposure(ore, p, "cfo", CFG, TAX)
+    second = [x for x in exp.paths if x.level == 2]
+    assert len(second) == 1 and second[0].industry_id == "mining_metal_ores"
+    sp = second[0]
+    assert sp.via_industry_id == "metallurgy" and sp.via_share == pytest.approx(0.4) and sp.basis == "prior"
+    assert sp.company_weight == pytest.approx(0.34 * 0.4, abs=1e-3)
+    m = cell(TAX, "supply", "prices_up")
+    expected = CFG.channel_weights["supply"] * CFG.role_channel("cfo", "supply") * 0.136 * m.strength * 0.5
+    assert sp.contribution == pytest.approx(expected, abs=1e-3)
+    assert sp.direction == "risk" and sp.mechanism.startswith("по цепочке поставок")
+    assert (
+        path_link(sp, TAX)
+        == "34% ваших закупок — металлургия, а добыча руд и прочих полезных ископаемых — около 40% их закупок"
+    )
+    graph = build_graph(ore.title, exp, TAX)
+    assert any(e.dashed for e in graph.edges) and all("вклад" not in (n.sublabel or "") for n in graph.nodes)
+    # прямой поставщик второго уровня не получает: металлургия уже путь первого уровня
+    _, metal = example_12()
+    assert all(x.level == 1 for x in compute_exposure(metal, p, "cfo", CFG, TAX).paths)

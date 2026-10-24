@@ -9,6 +9,7 @@ from alfa_insight.data.factors import exposure_level
 from alfa_insight.data.models import CompanyProfile, IndustryShare
 from alfa_insight.data.profiles import BUCKET_RU, DIRECTION_RU, PRODUCT_NAMES, pct
 from alfa_insight.llm.prompts import PromptLoader, sanitize_untrusted
+from alfa_insight.ranking.chain import strength_label
 from alfa_insight.ranking.effects import DIRECTION_RU as IMPACT_RU
 from alfa_insight.ranking.effects import EFFECT_SHORT
 from alfa_insight.ranking.models import ChainPath
@@ -91,12 +92,10 @@ def profile_brief(prompts: PromptLoader, tax: Taxonomy, p: CompanyProfile) -> st
     )
 
 
-def strength_label(value: float) -> str:
-    """Сила связи словами: клиенту не показываем внутренние коэффициенты 0–1."""
-    return "высокая" if value >= 0.6 else "средняя" if value >= 0.3 else "низкая"
-
-
 def path_weight_label(path: ChainPath) -> str:
+    if path.level == 2 and path.via_industry_name:
+        via = f"доля закупок у отрасли «{path.via_industry_name}» {pct(path.raw_share) if path.raw_share is not None else '≈ ' + pct(path.company_weight / (path.via_share or 1))}"
+        return f"второй уровень: {via}, а {path.industry_name} — около {pct(path.via_share or 0)} закупок этой отрасли (типовые доли)"
     if path.channel in ("supply", "demand"):
         what = "закупок" if path.channel == "supply" else "продаж"
         if path.basis == "prior" or path.raw_share is None:
@@ -115,6 +114,8 @@ def path_line(path: ChainPath, eid: str | None) -> str:
     if path.channel == "factor":
         arrow = "рост" if (path.factor_direction or 1) > 0 else "снижение"
         what = f"{path.factor_name} · {arrow}"
+    elif path.level == 2:
+        what = f"{path.industry_name} → {path.via_industry_name} · {path.effect}"
     else:
         what = f"{path.industry_name} · {path.effect}"
     return (
@@ -128,6 +129,11 @@ def path_text(path: ChainPath) -> str:
     if path.channel == "factor":
         arrow = "рост" if (path.factor_direction or 1) > 0 else "снижение"
         head = f"Фактор «{path.factor_name}»: событие означает {arrow}."
+    elif path.level == 2:
+        head = (
+            f"Отрасль «{path.industry_name}» — поставщик ваших поставщиков (отрасль «{path.via_industry_name}»): "
+            f"{EFFECT_SHORT.get(path.effect or '', path.effect or '')}."
+        )
     else:
         head = (
             f"Отрасль «{path.industry_name}» ({CHANNEL_RU[path.channel]}): "

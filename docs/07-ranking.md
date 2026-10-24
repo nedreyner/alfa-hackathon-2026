@@ -75,6 +75,14 @@ c = W[supply] · R[role][supply] · Ŝ(i) · s · M[supply][eff].strength
 
 **Demand** — то же с `B̂(i)` и `M[demand]`.
 
+**Supply, второй уровень** (цепочка «событие → отрасль поставщиков поставщика → поставщик → компания») — для отраслевого тега `(j, eff)`, если `j` не прямой поставщик компании (`Ŝ(j) < min_share`). Среди поставщиков компании `i` с `Ŝ(i) ≥ min_share` берётся один с наибольшим `Ŝ(i) · T(i, j)`, где `T(i, j) ≥ min_share` — типовая доля `j` в закупках отрасли `i` (`typical_suppliers`):
+
+```
+c = W[supply] · R[role][supply] · Ŝ(i) · T(i, j) · s · M[supply][eff].strength · second_level_decay   (0.5)
+```
+
+Путь получает `level=2`, `via_industry_id=i`, `via_share=T(i, j)`, `basis=prior`, механизм с префиксом «по цепочке поставок». Пример: руда дорожает → металлургия (34% закупок застройщика, доля руды в закупках металлургов ≈ 40%) → застройщик. На офлайн-наборе 24.10.2026 второй уровень не изменил nDCG@5 (0,825) и поднял точность направления с 0,767 до 0,788.
+
 **Factor** — для каждого факторного тега `(f, d)`, если экспозиция компании `X(f) ≥ min_factor_exposure`:
 
 ```
@@ -109,6 +117,10 @@ class ChainPath(BaseModel):
     top_counterparties: list[CounterpartyBrief] = []   # supply/demand: до 3 крупнейших в этой отрасли
     reasons: list[str] = []                   # factor: reasons из профиля
     feature_keys: list[str]                   # «suppliers.metallurgy», «factor.key_rate», «industry.main» …
+    level: Literal[1, 2] = 1                  # 2 — второй уровень цепочки поставок
+    via_industry_id: str | None = None        # уровень 2: отрасль-поставщик компании, через которую идёт влияние
+    via_industry_name: str | None = None
+    via_share: float | None = None            # уровень 2: T(i, j)
 
 class Exposure(BaseModel):
     event_id: int; company_id: str; role: Role
@@ -280,19 +292,20 @@ class ChainNode(BaseModel):
     id: str
     kind: Literal["event", "industry", "factor", "exposure", "consequence"]
     label: str                     # «Металлургия: цены растут»
-    sublabel: str | None = None    # «вклад 0.37»
+    sublabel: str | None = None    # «сила связи средняя» (вклад словами: ≥ 0.6 высокая, ≥ 0.3 средняя)
     direction: Direction | None = None
     x: int; y: int                 # колонка × 280, строка × 110
     source_ids: list[str] = []     # клик по узлу открывает источник
 
 class ChainEdge(BaseModel):
     id: str; source: str; target: str; label: str | None = None; weight: float
+    dashed: bool = False           # путь второго уровня — пунктир
 
 class ChainGraph(BaseModel):
     nodes: list[ChainNode]; edges: list[ChainEdge]
 ```
 
-Колонки: 0 — событие; 1 — отрасль или фактор с эффектом; 2 — экспозиция компании («34% закупок», «кредит + лизинг»); 3 — последствие (механизм, цвет по направлению). Толщина ребра на клиенте: `1 + 4 · weight`.
+Колонки: 0 — событие; 1 — отрасль или фактор с эффектом; 2 — экспозиция компании («34% закупок», «кредит + лизинг»); 3 — последствие (механизм, цвет по направлению). Толщина ребра на клиенте: `1 + 4 · weight`; подпись последнего ребра — сила связи словами («заметная связь»), рёбра пути второго уровня — пунктиром.
 
 ## 12. Пример расчёта
 

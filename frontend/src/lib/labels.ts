@@ -238,3 +238,8 @@ export const REVIEW = {
   share: 'подтверждено',
   status: { needs_review: 'на проверке', published: 'выпущен, низкая уверенность' } as Record<string, string>,
 } as const;
+
+/** Сила связи пути влияния словами (как `strength_label` на бэкенде): коэффициенты 0–1 клиенту не показываем. */
+export function strengthLabel(weight: number): string {
+  return weight >= 0.6 ? 'сильная связь' : weight >= 0.3 ? 'заметная связь' : 'слабая связь';
+}

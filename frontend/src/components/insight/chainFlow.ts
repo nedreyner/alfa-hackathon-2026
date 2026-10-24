@@ -1,6 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
 
 import type { ChainGraph, ChainNode } from '../../api/types';
+import { strengthLabel } from '../../lib/labels';
 
 export type FlowData = { node: ChainNode; vertical: boolean; onOpen?: (n: ChainNode) => void };
 
@@ -19,8 +20,13 @@ export function toFlow(chain: ChainGraph, vertical: boolean, onOpen?: (n: ChainN
     id: e.id,
     source: e.source,
     target: e.target,
-    label: e.label ? `вклад ${e.weight.toFixed(2)}` : undefined,
-    style: { strokeWidth: 1 + 4 * Math.min(1, e.weight * 2), stroke: '#9a9aa0' },
+    label: e.label ? strengthLabel(e.weight) : undefined,
+    // второй уровень цепочки поставок — пунктир
+    style: {
+      strokeWidth: 1 + 4 * Math.min(1, e.weight * 2),
+      stroke: '#9a9aa0',
+      ...(e.dashed ? { strokeDasharray: '6 5' } : {}),
+    },
     labelStyle: { fontSize: 11, fill: '#6e6e73' },
     labelBgStyle: { fill: '#f3f4f5' },
   }));

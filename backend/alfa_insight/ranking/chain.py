@@ -24,6 +24,13 @@ from alfa_insight.reference.taxonomy import Taxonomy
 from alfa_insight.text.normalize import lower_name
 
 MIN_PATH = 0.01
+
+
+def strength_label(value: float) -> str:
+    """Сила связи словами: клиенту не показываем внутренние коэффициенты 0–1."""
+    return "высокая" if value >= 0.6 else "средняя" if value >= 0.3 else "низкая"
+
+
 FULL_COVERAGE = 0.95
 PREVIEW_EVENT_CHARS = 60
 
@@ -141,6 +148,40 @@ def compute_exposure(
                 raw_contribution=cfg.channel_weights[side] * rw * share.value * s * m.strength,  # type: ignore[index]
             )  # fmt: skip
 
+    # supply, второй уровень: событие бьёт по отрасли j, которая поставляет отрасли i, а i — ваш поставщик.
+    # Доли j в закупках i — типовые; затухание second_level_decay. Только если j — не прямой поставщик.
+    supply_shares = shares["supply"] if shares is not None else blended_shares(profile, tax, "supply")
+    direct = {p.industry_id for p in paths if p.channel == "supply"}
+    for tag in event.industries:
+        j = tag.industry_id
+        if j in direct or (j in supply_shares and supply_shares[j].value >= cfg.min_share):
+            continue
+        s = tag.impact * tag.confidence
+        best: tuple[float, str, float, BlendedShare] | None = None
+        for via, share in supply_shares.items():
+            if via == j or share.value < cfg.min_share or via == "unknown":
+                continue
+            t = tax.typical_suppliers(via).get(j, 0.0)
+            if t < cfg.min_share:
+                continue
+            w = share.value * t
+            if best is None or w > best[0]:
+                best = (w, via, t, share)
+        if best is None:
+            continue
+        w, via, t, share = best
+        m = cell(tax, "supply", tag.effect)
+        rw = cfg.role_channel(role, "supply")
+        fkey = f"suppliers.{via}"
+        add(
+            channel="supply", industry_id=j, industry_name=tax.industry(j).name, effect=tag.effect,
+            company_weight=round(w, 6), raw_share=share.raw_share, basis="prior", coverage=round(share.coverage, 6),
+            event_strength=round(s, 6), matrix_strength=m.strength, role_weight=rw, direction=m.direction,
+            mechanism=f"по цепочке поставок: {m.mechanism}", feature_keys=[fkey] if fkey in feature_keys else [],
+            level=2, via_industry_id=via, via_industry_name=tax.industry(via).name, via_share=round(t, 6),
+            raw_contribution=cfg.channel_weights["supply"] * rw * w * s * m.strength * cfg.second_level_decay,
+        )  # fmt: skip
+
     # factor: макрофакторы с экспозицией компании
     for ftag in event.factors:
         exp = profile.factor(ftag.factor_id)
@@ -193,6 +234,14 @@ def pct(value: float) -> str:
 
 def path_link(path: ChainPath, tax: Taxonomy) -> str:
     name = lower_name(path.industry_name)
+    if path.level == 2 and path.via_industry_name:
+        via = lower_name(path.via_industry_name)
+        mine = (
+            pct(path.raw_share)
+            if path.raw_share is not None
+            else f"≈ {pct(path.company_weight / (path.via_share or 1))}"
+        )
+        return f"{mine} ваших закупок — {via}, а {name} — около {pct(path.via_share or 0)} их закупок"
     if path.channel in ("supply", "demand"):
         what = "закупок" if path.channel == "supply" else "продаж"
         if path.basis == "prior" or path.raw_share is None:
@@ -236,16 +285,17 @@ def build_graph(
         exposure_label = path_link(p, tax)
         exp_node = ChainNode(
             id=f"{p.id}-exposure", kind="exposure", label=exposure_label[:1].upper() + exposure_label[1:],
-            sublabel=f"вклад {p.contribution:.2f}", x=560, y=y, source_ids=sources.get(p.id, []),
+            sublabel=f"сила связи {strength_label(p.contribution)}", x=560, y=y, source_ids=sources.get(p.id, []),
         )  # fmt: skip
         cons = ChainNode(
             id=f"{p.id}-consequence", kind="consequence", label=p.mechanism[:1].upper() + p.mechanism[1:],
             sublabel=DIRECTION_RU[p.direction], direction=p.direction, x=840, y=y,
         )  # fmt: skip
         nodes += [mid, exp_node, cons]
+        second = p.level == 2
         edges += [
-            ChainEdge(id=f"{p.id}-e1", source="event", target=mid.id, weight=weight),
-            ChainEdge(id=f"{p.id}-e2", source=mid.id, target=exp_node.id, weight=weight),
+            ChainEdge(id=f"{p.id}-e1", source="event", target=mid.id, weight=weight, dashed=second),
+            ChainEdge(id=f"{p.id}-e2", source=mid.id, target=exp_node.id, weight=weight, dashed=second),
             ChainEdge(id=f"{p.id}-e3", source=exp_node.id, target=cons.id, label=p.id, weight=weight),
         ]
     return ChainGraph(nodes=nodes, edges=edges)

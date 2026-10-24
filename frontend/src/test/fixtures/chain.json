@@ -20,7 +20,7 @@
       "id": "P1-exposure",
       "kind": "exposure",
       "label": "34% ваших закупок — металлургия",
-      "sublabel": "вклад 0.39",
+      "sublabel": "сила связи средняя",
       "x": 560,
       "y": 0,
       "source_ids": ["data:C:supply:metallurgy"]

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-24T04:30:16Z",
+  "generated_at": "2026-10-24T05:41:13Z",
   "dataset": {
     "companies": 6,
     "judgements": 60,
@@ -14,7 +14,7 @@
     "p@5": 0.6333,
     "recall_rel3@5": 0.8889,
     "spearman": 0.7025,
-    "direction_acc": 0.7667,
+    "direction_acc": 0.7875,
     "per_company": {
       "SYN-DEMO-01": {
         "ndcg@5": 0.8180355296436479,
@@ -42,7 +42,7 @@
         "p@5": 0.6,
         "recall_rel3@5": 1.0,
         "spearman": 0.7956219919452866,
-        "direction_acc": 0.625
+        "direction_acc": 0.75
       },
       "SYN-DEMO-05": {
         "ndcg@5": 0.9534989709086827,
@@ -63,7 +63,7 @@
     "score_medians_by_rel": {
       "0": 0.1434,
       "1": 0.7994,
-      "2": 0.7487,
+      "2": 0.749,
       "3": 0.8371
     },
     "baselines": {
@@ -83,24 +83,24 @@
         "p@5": 0.6333,
         "recall_rel3@5": 0.8889,
         "spearman": 0.7129,
-        "direction_acc": 0.7667
+        "direction_acc": 0.7875
       }
     }
   },
   "generation": {
-    "insights": 18,
+    "insights": 7,
     "planned": 18,
-    "grounded_share_llm": 0.9802,
+    "grounded_share_llm": 0.9694,
     "completeness": 1.0,
-    "contradiction_rate": 0.2222,
+    "contradiction_rate": 0.2857,
     "personalization_rate": 1.0,
     "numbers_match_rate": 1.0,
     "needs_review_share": 0.0,
     "latency_ms": {
-      "p50": 26000,
-      "p95": 44000
+      "p50": 23000,
+      "p95": 33000
     },
-    "cost_rub_mean": 0.4881,
+    "cost_rub_mean": 0.4695,
     "grounded_share_human": null,
     "judge_agreement": null,
     "human_checked": 0
@@ -196,8 +196,8 @@
     },
     "prompt_versions": {
       "tagging": "tagging_v1+tx8",
-      "draft": "draft_v2",
-      "agent": "agent_v3",
+      "draft": "draft_v3",
+      "agent": "agent_v4",
       "verify": "verify_v2",
       "eval_label": "eval_label_v1"
     },

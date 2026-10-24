@@ -1847,6 +1847,11 @@
           "weight": {
             "type": "number",
             "title": "Weight"
+          },
+          "dashed": {
+            "type": "boolean",
+            "title": "Dashed",
+            "default": false
           }
         },
         "type": "object",

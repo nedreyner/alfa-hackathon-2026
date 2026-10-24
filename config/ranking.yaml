@@ -5,6 +5,7 @@ min_relevance_to_store: 0.05
 channel_weights: {own: 1.0, supply: 0.9, demand: 0.8, factor: 0.7}
 secondary_industry_weight: 0.5
 min_share: 0.02
+second_level_decay: 0.5   # затухание пути второго уровня цепочки поставок (§4)
 min_factor_exposure: 0.15
 max_path_contribution: 0.95
 direction_mixed_ratio: 0.25
