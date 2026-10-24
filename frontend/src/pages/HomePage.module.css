@@ -1,0 +1,73 @@
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1.4fr 1fr;
+    align-items: start;
+  }
+}
+
+.today {
+  border-radius: var(--ai-radius-lg);
+  padding: 24px;
+  background: linear-gradient(160deg, #fff 0%, #fff6f5 100%);
+  border: 1px solid var(--ai-border);
+  box-shadow: var(--ai-shadow);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ai-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.item:first-of-type {
+  border-top: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.headline {
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.mock {
+  position: relative;
+}
+
+.demoPlate {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--ai-bg-subtle);
+  color: var(--ai-text-secondary);
+}
+
+.account {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--ai-border);
+}
+
+.amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

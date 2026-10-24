@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from alfa_insight.agent.schemas import Action, Insight, ProductOffer
 from alfa_insight.appctx import AppContext
-from alfa_insight.ranking.diversity import diversify_rows
+from alfa_insight.ranking.diversity import diversify, diversify_rows, main_path_key
 from alfa_insight.ranking.models import Direction, ImpactLevel, Role
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
@@ -90,8 +90,13 @@ def build_brief(app: AppContext, company_id: str, role: Role) -> Brief:
                 direction=r["direction"], impact_level=r["impact_level"], action=None, product=None, score=r["score"],
             )
         )  # fmt: skip
-    items.sort(key=lambda i: -(i.score * READY_BOOST if i.status == "ready" else i.score))
-    top = items[:BRIEF_ITEMS]
+    keys = {r["event_id"]: main_path_key(r) for r in rows}
+    ordered = diversify(
+        items,
+        score=lambda i: i.score * READY_BOOST if i.status == "ready" else i.score,
+        key=lambda i: keys[i.event_id],
+    )
+    top = ordered[:BRIEF_ITEMS]
     words = sum(_words(i) for i in top)
     return Brief(
         role=role,
