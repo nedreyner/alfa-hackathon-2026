@@ -423,6 +423,8 @@ class VerificationReport(BaseModel):
 
 **Пройдено**, если одновременно: нет `fail`, `supported_share ≥ 0.8`, нет `contradicted`, `missing` пуст.
 
+Утверждение с `fail` по проверкам, удаляющим утверждение (§9.5, п. 1), даёт 0. Утверждение без вердикта судьи даёт 1, если судья не вызывался (`llm_skipped`), и 0.5, если судья его пропустил. Вердикты по неизвестным путям отбрасываются.
+
 `issues` формируются так: по строке на каждый `fail`, `partial`, `unsupported` и `contradicted`, затем `missing` и `contradictions`. Пример: «consequences[1].claim: числа „12%“ нет в E3 — убери его или возьми число из источника».
 
 ### 9.4 Доработка
@@ -433,7 +435,7 @@ class VerificationReport(BaseModel):
 
 1. Удалить утверждения с `fail` по `refs_exist`, `fact_has_source`, `bank_has_alfa`, `numbers_match` и `no_foreign_urls`, а также с вердиктом `unsupported` или `contradicted`. Последствие или действие удаляется целиком вместе со своим `claim`.
 2. `why_it_matters.summary` не удаляется. Если оно не подтверждено, тип меняется на `ai`, `confidence=low`, статус инсайта — `needs_review`.
-3. Пустой обязательный блок (facts, consequences, actions) → `needs_review`.
+3. Пустой обязательный блок (facts, consequences, actions) → `needs_review`. Чтобы инсайт оставался валидным по схеме, в таком блоке остаётся первый элемент с утверждением, понижённым до `ai`, `confidence=low`.
 4. Иначе `published`, если `supported_share` после удаления ≥ 0.6, в противном случае `needs_review`.
 5. Число удалённых утверждений записывается в `verification.removed_claims`. В UI плашка: «Часть выводов скрыта: не удалось подтвердить источниками».
 
