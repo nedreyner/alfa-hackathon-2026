@@ -89,10 +89,7 @@
   }
 }
 
-@media (max-width: 720px) {
-  .company {
-    display: none;
-  }
+@media (max-width: 1000px) {
   .nav {
     order: 3;
     flex-basis: 100%;
