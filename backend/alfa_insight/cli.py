@@ -10,6 +10,7 @@ from alfa_insight.ingest.commands import ingest_app, pipeline_app, seed_app
 from alfa_insight.ingest.macro_commands import macro_app
 from alfa_insight.ingest.research.commands import research_app
 from alfa_insight.llm.commands import llm_app
+from alfa_insight.ranking.commands import rank_app
 from alfa_insight.search.commands import search_app
 
 app = typer.Typer(
@@ -39,7 +40,6 @@ def _stub_group(name: str, help_text: str) -> typer.Typer:
 
 
 GROUPS: dict[str, str] = {
-    "rank": "Ранжирование событий для компаний.",
     "eval": "Офлайн-оценка качества.",
     "demo": "Демо-кураторство и заморозка кеша.",
     "api": "API: OpenAPI-схема и служебные команды.",
@@ -57,6 +57,7 @@ app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(macro_app, name="macro")
 app.add_typer(research_app, name="research")
 app.add_typer(search_app, name="search")
+app.add_typer(rank_app, name="rank")
 
 db_app = typer.Typer(help="SQLite: миграции и обслуживание.", no_args_is_help=True)
 app.add_typer(db_app, name="db")

@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from alfa_insight.db.duck import DuckReader
     from alfa_insight.llm.prompts import PromptLoader
     from alfa_insight.llm.router import LLMRouter
+    from alfa_insight.ranking.models import RankingConfig
+    from alfa_insight.ranking.service import RankingService
 
 
 @dataclass
@@ -71,6 +73,23 @@ class AppContext:
         return self._get(  # type: ignore[no-any-return]
             "profiles",
             lambda: ProfileStore(self.duck, ProfileOverridesRepo(self.db), self.taxonomy, self.demo.ids()),
+        )
+
+    @property
+    def ranking_config(self) -> RankingConfig:
+        from alfa_insight.config_models import load_yaml
+        from alfa_insight.ranking.models import RankingConfig
+
+        return self._get(
+            "ranking_config", lambda: load_yaml(self.settings.config_path / "ranking.yaml", RankingConfig)
+        )  # type: ignore[no-any-return]
+
+    @property
+    def ranking(self) -> RankingService:
+        from alfa_insight.ranking.service import RankingService
+
+        return self._get(  # type: ignore[no-any-return]
+            "ranking", lambda: RankingService(self.db, self.profiles, self.ranking_config, self.taxonomy)
         )
 
     @property

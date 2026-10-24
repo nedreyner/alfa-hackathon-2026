@@ -1,6 +1,6 @@
 # Веса ранжирования и «цепной реакции» (docs/07-ranking.md §6). Калибруются на офлайн-разметке.
 version: 1
-window_days: 7
+window_days: 30   # seed охватывает два месяца; свежесть всё равно гасит старые события
 min_relevance_to_store: 0.05
 channel_weights: {own: 1.0, supply: 0.9, demand: 0.8, factor: 0.7}
 secondary_industry_weight: 0.5
