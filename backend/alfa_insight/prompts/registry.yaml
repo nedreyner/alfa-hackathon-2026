@@ -3,10 +3,10 @@ tagging:          {version: tagging_v1,          system: tagging.system.j2,     
 research_extract: {version: research_extract_v1, system: research_extract.system.j2, user: research_extract.user.j2}
 vision:           {version: vision_v1,           system: vision.system.j2,           user: vision.user.j2}
 rerank:           {version: rerank_v1,           system: rerank.system.j2,           user: rerank.user.j2}
-agent:            {version: agent_v3,            system: agent.system.j2,            user: agent.user.j2}
-draft:            {version: draft_v2,            system: agent.system.j2,            user: draft.user.j2}
-revise:           {version: revise_v2,           system: agent.system.j2,            user: revise.user.j2}
+agent:            {version: agent_v4,            system: agent.system.j2,            user: agent.user.j2}
+draft:            {version: draft_v3,            system: agent.system.j2,            user: draft.user.j2}
+revise:           {version: revise_v3,           system: agent.system.j2,            user: revise.user.j2}
 verify:           {version: verify_v2,           system: verify.system.j2,           user: verify.user.j2}
-chat:             {version: chat_v2,             system: chat.system.j2,             user: chat.user.j2}
+chat:             {version: chat_v3,             system: chat.system.j2,             user: chat.user.j2}
 ocr:              {version: ocr_v1,              system: ocr.system.j2,              user: ocr.user.j2}
 eval_label:       {version: eval_label_v1,       system: eval_label.system.j2,       user: eval_label.user.j2}

@@ -85,7 +85,11 @@ def test_event_profile_exposure(seeded_ctx) -> None:  # type: ignore[no-untyped-
     first = exp.evidence[0]
     assert first.source_id.startswith(f"data:SYN-DEMO-01:exposure:{eid}:")
     assert first.meta["path_id"] == "P1" and ctx.path_eids["P1"] == first.eid
-    assert "Вклад в релевантность" in first.text and "Путей влияния" in exp.summary
+    assert (
+        "Сила связи:" in first.text
+        and "0." not in first.text.split("Сила связи:")[1][:12]
+        and "Путей влияния" in exp.summary
+    )
     supply = [e for e in exp.evidence if e.meta["channel"] == "supply"]
     assert supply and "доля закупок" in supply[0].text
 

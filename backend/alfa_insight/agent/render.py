@@ -91,6 +91,11 @@ def profile_brief(prompts: PromptLoader, tax: Taxonomy, p: CompanyProfile) -> st
     )
 
 
+def strength_label(value: float) -> str:
+    """Сила связи словами: клиенту не показываем внутренние коэффициенты 0–1."""
+    return "высокая" if value >= 0.6 else "средняя" if value >= 0.3 else "низкая"
+
+
 def path_weight_label(path: ChainPath) -> str:
     if path.channel in ("supply", "demand"):
         what = "закупок" if path.channel == "supply" else "продаж"
@@ -101,11 +106,11 @@ def path_weight_label(path: ChainPath) -> str:
     if path.channel == "own":
         return "основная отрасль" if path.basis == "main_industry" else "дополнительная отрасль"
     reasons = f" ({', '.join(path.reasons[:2])})" if path.reasons else ""
-    return f"экспозиция {path.company_weight:.2f}{reasons}"
+    return f"чувствительность компании {strength_label(path.company_weight)}{reasons}"
 
 
 def path_line(path: ChainPath, eid: str | None) -> str:
-    """`P1 [E4] поставщики · Металлургия · prices_up · доля закупок 34% (покрытие 90%) · вклад 0.28 · риск · …`."""
+    """`P1 [E4] поставщики · Металлургия · prices_up · доля закупок 34% (покрытие 90%) · сила связи средняя · риск · …`."""
     ref = f" [{eid}]" if eid else ""
     if path.channel == "factor":
         arrow = "рост" if (path.factor_direction or 1) > 0 else "снижение"
@@ -114,7 +119,7 @@ def path_line(path: ChainPath, eid: str | None) -> str:
         what = f"{path.industry_name} · {path.effect}"
     return (
         f"{path.id}{ref} {CHANNEL_RU[path.channel]} · {what} · {path_weight_label(path)} · "
-        f"вклад {path.contribution:.2f} · {IMPACT_RU[path.direction]} · {path.mechanism}"
+        f"сила связи {strength_label(path.contribution)} · {IMPACT_RU[path.direction]} · {path.mechanism}"
     )
 
 
@@ -133,7 +138,7 @@ def path_text(path: ChainPath) -> str:
         tops = ", ".join(f"{c.name} — {pct(c.share)}" for c in path.top_counterparties)
         parts.append(f"Крупнейшие контрагенты отрасли: {tops}.")
     parts.append(
-        f"Вклад в релевантность: {path.contribution:.2f}. {IMPACT_RU[path.direction].capitalize()}: {path.mechanism}."
+        f"Сила связи: {strength_label(path.contribution)}. {IMPACT_RU[path.direction].capitalize()}: {path.mechanism}."
     )
     return " ".join(parts)
 

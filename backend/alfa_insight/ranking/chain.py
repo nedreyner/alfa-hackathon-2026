@@ -200,7 +200,7 @@ def path_link(path: ChainPath, tax: Taxonomy) -> str:
         return f"{pct(path.raw_share)} ваших {what} — {name}"
     if path.channel == "own":
         return f"ваша отрасль — {name}"
-    reason = path.reasons[0] if path.reasons else "экспозиция компании"
+    reason = path.reasons[0] if path.reasons else "чувствительность компании"
     return f"{lower_name(path.factor_name)}: {reason}"
 
 
