@@ -13,6 +13,7 @@ from alfa_insight.ranking.effects import DIRECTION_RU as IMPACT_RU
 from alfa_insight.ranking.effects import EFFECT_SHORT
 from alfa_insight.ranking.models import ChainPath
 from alfa_insight.reference.taxonomy import Taxonomy
+from alfa_insight.text.normalize import lower_name
 
 MIX_LABEL_TOP = 5
 CHAIN_BLOCK_PATHS = 6
@@ -42,11 +43,11 @@ def ved_label(p: CompanyProfile) -> str:
 def mix_label(mix: list[IndustryShare], prior: dict[str, float], coverage: float, tax: Taxonomy) -> str:
     if coverage > 0 and mix:
         top = sorted(mix, key=lambda s: -s.share_total)[:MIX_LABEL_TOP]
-        return ", ".join(f"{s.name.lower()} {pct(s.share_total)}" for s in top)
+        return ", ".join(f"{lower_name(s.name)} {pct(s.share_total)}" for s in top)
     if prior:
         top_prior = sorted(prior.items(), key=lambda kv: -kv[1])[:MIX_LABEL_TOP]
         return "нет данных; типично для отрасли: " + ", ".join(
-            f"{tax.industry(i).name.lower()} ≈ {pct(v)}" for i, v in top_prior
+            f"{lower_name(tax.industry(i).name)} ≈ {pct(v)}" for i, v in top_prior
         )
     return "нет данных"
 

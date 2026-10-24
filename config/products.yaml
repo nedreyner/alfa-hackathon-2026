@@ -1,0 +1,77 @@
+# Каталог продуктов банка для блока действий (docs/08-agent.md §15)
+version: 1
+disclaimer: "Названия продуктов обобщённые; условия уточняйте у менеджера банка."
+products:
+  - id: fx_hedge_forward
+    name: Валютный форвард
+    pitch: Зафиксируйте курс будущих платежей и уберите валютный риск из бюджета.
+    roles: [treasurer, cfo]
+    triggers: [{channel: factor, factor_prefix: "fx_", direction: risk}]
+    conditions: {ved: true}
+  - id: ved_payments
+    name: Расчёты по ВЭД и валютный контроль
+    pitch: Проводите платежи партнёрам за рубежом через отлаженные каналы и с сопровождением валютного контроля.
+    roles: [treasurer]
+    triggers: [{channel: factor, factor: cross_border_payments, direction: risk},
+               {channel: factor, factor: sanctions, direction: risk}]
+    conditions: {ved: true}
+  - id: letter_of_credit
+    name: Аккредитив
+    pitch: Снизьте риск непоставки и предоплаты в сделках с новыми поставщиками.
+    roles: [cfo, treasurer]
+    triggers: [{channel: supply, effect: supply_down}, {channel: factor, factor: sanctions, direction: risk}]
+  - id: trade_finance
+    name: Торговое финансирование ВЭД
+    pitch: Получите отсрочку платежа зарубежному поставщику под покрытие банка.
+    roles: [treasurer, cfo]
+    triggers: [{channel: factor, factor: customs_tariffs, direction: risk}, {channel: supply, effect: prices_up}]
+    conditions: {ved_direction: import}
+  - id: credit_line_working_capital
+    name: Кредитная линия на пополнение оборотных средств
+    pitch: Закупите сырьё и товар заранее, до роста цен, без отвлечения собственных средств.
+    roles: [cfo]
+    triggers: [{channel: supply, effect: prices_up}, {channel: demand, effect: demand_up}, {channel: own, effect: demand_up}]
+  - id: interest_rate_hedge
+    name: Фиксация процентной ставки
+    pitch: Защитите долг с плавающей ставкой от роста ключевой ставки.
+    roles: [treasurer, cfo]
+    triggers: [{channel: factor, factor: key_rate, event_direction: up}]
+    conditions: {products: [credit]}
+  - id: refinancing
+    name: Рефинансирование кредитов
+    pitch: Пересоберите долговой портфель под новые условия ставок.
+    roles: [cfo, treasurer]
+    triggers: [{channel: factor, factor: key_rate, event_direction: down}]
+    conditions: {products: [credit]}
+  - id: deposit_placement
+    name: Размещение свободных средств
+    pitch: Получайте доход на остатки, пока ставки высокие.
+    roles: [treasurer]
+    triggers: [{channel: factor, factor: key_rate, event_direction: up}]
+  - id: factoring
+    name: Факторинг
+    pitch: Получайте деньги за отгрузку сразу, не дожидаясь оплаты покупателей.
+    roles: [cfo, treasurer]
+    triggers: [{channel: demand, effect: demand_down}, {channel: demand, effect: costs_up},
+               {channel: factor, factor: payment_discipline, direction: risk}]
+  - id: bank_guarantee
+    name: Банковская гарантия
+    pitch: Участвуйте в госзакупках и крупных тендерах без заморозки собственных средств.
+    roles: [owner, cfo]
+    triggers: [{channel: factor, factor: gov_spending, direction: opportunity}, {channel: own, effect: support_measures}]
+  - id: leasing
+    name: Лизинг техники и оборудования
+    pitch: Обновите парк техники и оборудования без крупных единовременных затрат.
+    roles: [owner, cfo]
+    triggers: [{channel: own, effect: demand_up}, {channel: own, effect: support_measures}]
+  - id: project_finance_escrow
+    name: Проектное финансирование с эскроу-счетами
+    pitch: Финансируйте строительство под поступления на эскроу-счета покупателей.
+    roles: [owner, cfo]
+    triggers: [{channel: factor, factor: mortgage_market}, {channel: own, effect: demand_up}]
+    conditions: {industries: [construction_buildings]}
+  - id: cash_management
+    name: Управление ликвидностью группы
+    pitch: Соберите остатки компаний группы и управляйте ликвидностью из одного окна.
+    roles: [treasurer]
+    triggers: [{channel: factor, factor: credit_conditions, direction: risk}, {channel: factor, factor: payment_discipline, direction: risk}]

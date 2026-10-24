@@ -28,6 +28,7 @@ from alfa_insight.search.research import search_research
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.macro import MacroStore
 from alfa_insight.store.news import NewsStore
+from alfa_insight.text.normalize import lower_name
 from alfa_insight.timeutil import parse_dt
 
 TOOL_TIMEOUT_S = 10.0
@@ -270,7 +271,7 @@ def compute_exposure(ctx: AgentContext, args: EventArgs) -> ToolResult:
         label = p.factor_name if p.channel == "factor" else p.industry_name
         item = _add(
             ctx, out, source_id=f"data:{ctx.company_id}:exposure:{sig.event_id}:{key}", kind="client_data",
-            title=f"Путь влияния: {CHANNEL_RU[p.channel]} — {(label or '').lower()}", text=path_text(p),
+            title=f"Путь влияния: {CHANNEL_RU[p.channel]} — {lower_name(label)}", text=path_text(p),
             meta={"path_id": p.id, "path_key": key, "channel": p.channel, "event_id": sig.event_id},
         )  # fmt: skip
         if item is not None:
@@ -283,7 +284,7 @@ def compute_exposure(ctx: AgentContext, args: EventArgs) -> ToolResult:
         first = exp.paths[0]
         name = (first.factor_name if first.channel == "factor" else first.industry_name) or ""
         summary = (
-            f"Путей влияния: {len(exp.paths)}; главный — {CHANNEL_RU[first.channel]}, {name.lower()}: "
+            f"Путей влияния: {len(exp.paths)}; главный — {CHANNEL_RU[first.channel]}, {lower_name(name)}: "
             f"{path_weight_label(first)}"
         )
     return ToolResult(
@@ -315,12 +316,15 @@ def get_counterparties(ctx: AgentContext, args: CounterpartiesArgs) -> ToolResul
     )
     what = "закупках" if side == "supply" else "продажах"
     who = "Поставщики" if side == "supply" else "Покупатели"
-    scope = ctx.app.taxonomy.industry(args.industry_id).name.lower() if args.industry_id else "все отрасли"
+    scope = (
+        lower_name(ctx.app.taxonomy.industry(args.industry_id).name) if args.industry_id else "все отрасли"
+    )
     out: list[EvidenceItem] = []
     if not items:
         return ToolResult(ok=True, summary=f"{who}: данных о платежах нет ({scope})")
     lines = [
-        f"{n}. {c.name} ({c.industry_name.lower()}) — {pct(c.share)} в {what}" for n, c in enumerate(items, 1)
+        f"{n}. {c.name} ({lower_name(c.industry_name)}) — {pct(c.share)} в {what}"
+        for n, c in enumerate(items, 1)
     ]
     mix = ctx.profile.suppliers_mix if side == "supply" else ctx.profile.buyers_mix
     head = f"{who} компании, {scope}."
@@ -488,7 +492,8 @@ def get_related_group(ctx: AgentContext, args: NoArgs) -> ToolResult:
     if not members:
         return ToolResult(ok=True, summary="Других компаний группы в данных нет")
     lines = [
-        f"{m['name']} — {m['industry_name'].lower()}" + (f", {m['region_name']}" if m["region_name"] else "")
+        f"{m['name']} — {lower_name(m['industry_name'])}"
+        + (f", {m['region_name']}" if m["region_name"] else "")
         for m in members
     ]
     out: list[EvidenceItem] = []

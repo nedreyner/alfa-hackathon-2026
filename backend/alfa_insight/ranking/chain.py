@@ -21,6 +21,7 @@ from alfa_insight.ranking.models import (
     Role,
 )
 from alfa_insight.reference.taxonomy import Taxonomy
+from alfa_insight.text.normalize import lower_name
 
 MIN_PATH = 0.01
 FULL_COVERAGE = 0.95
@@ -189,7 +190,7 @@ def pct(value: float) -> str:
 
 
 def path_link(path: ChainPath, tax: Taxonomy) -> str:
-    name = (path.industry_name or "").lower() if path.industry_name else ""
+    name = lower_name(path.industry_name)
     if path.channel in ("supply", "demand"):
         what = "закупок" if path.channel == "supply" else "продаж"
         if path.basis == "prior" or path.raw_share is None:
@@ -198,7 +199,7 @@ def path_link(path: ChainPath, tax: Taxonomy) -> str:
     if path.channel == "own":
         return f"ваша отрасль — {name}"
     reason = path.reasons[0] if path.reasons else "экспозиция компании"
-    return f"{(path.factor_name or '').lower()}: {reason}"
+    return f"{lower_name(path.factor_name)}: {reason}"
 
 
 def chain_preview(event_title: str, exposure: Exposure, tax: Taxonomy) -> str | None:

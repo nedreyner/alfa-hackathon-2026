@@ -75,3 +75,10 @@ def normalize_url(url: str | None) -> str:
     if path != "/" and path.endswith("/"):
         path = path.rstrip("/") or "/"
     return urlunsplit((scheme, host, path, urlencode(query), ""))
+
+
+def lower_name(name: str | None) -> str:
+    """Название в середину фразы: строчные буквы, кроме аббревиатур (ЦБ, ВЭД, США)."""
+    if not name:
+        return ""
+    return " ".join(w if sum(ch.isupper() for ch in w) >= 2 else w.lower() for w in name.split(" "))

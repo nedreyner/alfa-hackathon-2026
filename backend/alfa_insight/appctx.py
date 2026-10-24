@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from alfa_insight.db.duck import DuckReader
     from alfa_insight.llm.prompts import PromptLoader
     from alfa_insight.llm.router import LLMRouter
+    from alfa_insight.products.catalog import ProductCatalog
     from alfa_insight.ranking.models import RankingConfig
     from alfa_insight.ranking.service import RankingService
 
@@ -97,6 +98,12 @@ class AppContext:
         from alfa_insight.data.counterparties import CounterpartyReader
 
         return self._get("counterparties", lambda: CounterpartyReader(self.duck, self.taxonomy))  # type: ignore[no-any-return]
+
+    @property
+    def products(self) -> ProductCatalog:
+        from alfa_insight.products.catalog import ProductCatalog
+
+        return self._get("products", lambda: ProductCatalog.load(self.settings.config_path / "products.yaml"))  # type: ignore[no-any-return]
 
 
 def build_context(settings: Settings | None = None) -> AppContext:
