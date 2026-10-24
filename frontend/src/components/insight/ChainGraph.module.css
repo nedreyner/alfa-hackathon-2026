@@ -1,12 +1,12 @@
 .wrap {
-  height: 340px;
+  height: 360px;
   border-radius: var(--ai-radius-md);
   background: var(--ai-bg-subtle);
   overflow: hidden;
 }
 
 .node {
-  width: 220px;
+  width: 196px;
   padding: 10px 12px;
   border-radius: 14px;
   background: var(--ai-bg);

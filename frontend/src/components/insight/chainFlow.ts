@@ -9,7 +9,7 @@ export function toFlow(chain: ChainGraph, vertical: boolean, onOpen?: (n: ChainN
   const nodes: Node<FlowData>[] = chain.nodes.map((n) => ({
     id: n.id,
     type: 'chain',
-    position: vertical ? { x: n.y * 1.9, y: n.x * 0.55 } : { x: n.x, y: n.y },
+    position: vertical ? { x: n.y * 1.9, y: n.x * 0.55 } : { x: n.x * 0.8, y: n.y * 1.05 },
     data: { node: n, vertical, onOpen },
     draggable: false,
     connectable: false,

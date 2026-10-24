@@ -21,7 +21,7 @@ describe('ChainGraph', () => {
   it('maps server graph to flow; vertical layout swaps axes', () => {
     const { nodes, edges } = toFlow(chain as ChainData, false);
     expect(nodes.map((n) => n.id)).toEqual(['event', 'P1-driver', 'P1-exposure', 'P1-consequence']);
-    expect(nodes[2].position).toEqual({ x: 560, y: 0 });
+    expect(nodes[2].position).toEqual({ x: 448, y: 0 });
     expect(edges[2].label).toBe('вклад 0.39');
     expect((edges[0].style as { strokeWidth: number }).strokeWidth).toBeCloseTo(1 + 4 * 0.78);
     const vertical = toFlow(chain as ChainData, true);
