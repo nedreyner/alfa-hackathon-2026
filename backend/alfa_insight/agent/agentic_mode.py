@@ -16,6 +16,7 @@ from alfa_insight.agent.pipeline_mode import (
     draft_and_verify,
     expected_impact,
     finish,
+    should_revise,
 )
 from alfa_insight.agent.render import chain_block, evidence_block, profile_brief
 from alfa_insight.agent.schemas import Insight, InsightDraft, VerificationReport
@@ -211,7 +212,7 @@ async def run_agentic(ctx: AgentContext, *, weak_note: str | None = None) -> Ins
     ctx.trace.phase("verify", "Проверяю факты")
     draft, report = await verify(ctx, draft, inp, attempt=1, exclude_families=exclude)
     attempts = 1
-    while not report.passed and attempts <= ctx.limits.max_revisions:
+    while should_revise(ctx, draft, report, attempts):
         ctx.trace.phase("revise", "Дорабатываю")
         ctx.trace.emit("revise.started", "revise", f"Дорабатываю: замечаний {len(report.issues)}",
                        payload={"issues": report.issues[:10]})  # fmt: skip

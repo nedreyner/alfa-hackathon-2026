@@ -41,7 +41,7 @@ models:
               capabilities: {vision: true}}
 tasks:
   tagging:             {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: background,  strategy: auto,      timeout_s: 30}
-  tagging_interactive: {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: interactive, strategy: auto,      timeout_s: 20}
+  tagging_interactive: {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: interactive, strategy: auto,      timeout_s: 20, hedge_after_s: 4.5}
   research_extract:    {chain: [qwen_text, deepseek], temperature: 0,   max_tokens: 2000, priority: background,  strategy: auto,      timeout_s: 60}
   vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 1500, priority: background,  strategy: json_object, timeout_s: 90}
   rerank:              {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 800,  priority: precompute,  strategy: auto,      timeout_s: 30}
@@ -53,6 +53,7 @@ tasks:
   chat:                {chain: [kimi, deepseek],      temperature: 0.3, max_tokens: 1500, priority: interactive, strategy: tool_call, timeout_s: 30}
 ```
 
+- `hedge_after_s` в задаче (только структурированный вывод): если первая модель цепочки не ответила за это время, параллельно запускается вторая; берётся первый валидный ответ, второй запрос отменяется. Включено для `tagging_interactive` (4,5 с): скорость Gemma на шлюзе колеблется от 5 до 12 с, а разметка стоит на критическом пути фичи B. Лишний расход — не больше одного вызова разметки за прогон. В режимах `fake` и `replay` хедж не используется.
 - `reasoning: false` в задаче отключает рассуждения модели: шлюз принимает `extra_body: {"reasoning": {"enabled": false}}`. Без этого qwen, deepseek, glm и kimi тратят до 200 токенов «на размышления» даже на ответ «ок» и при малом `max_tokens` возвращают пустой `content`. С отключением ответ дешевле в 10–30 раз и заметно быстрее. Значение входит в ключ кеша.
 - Чат идёт на `[deepseek, kimi]`, а не `[kimi, deepseek]`: по замеренным ценам (§2.2) kimi дороже deepseek в 4–6 раз.
 - `priority` в задаче — значение по умолчанию. Вызывающий код может его поднять: например, `draft` внутри интерактивного прогона идёт с `interactive`.

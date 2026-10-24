@@ -159,7 +159,7 @@ async def draft_and_verify(
     ctx.trace.phase("verify", "Проверяю факты")
     draft, report = await verify(ctx, draft, inp, attempt=1, exclude_families=exclude)
     attempts = 1
-    while not report.passed and attempts <= ctx.limits.max_revisions:
+    while should_revise(ctx, draft, report, attempts):
         ctx.trace.phase("revise", "Дорабатываю")
         ctx.trace.emit("revise.started", "revise", f"Дорабатываю: замечаний {len(report.issues)}",
                        payload={"issues": report.issues[:10]})  # fmt: skip
@@ -170,6 +170,30 @@ async def draft_and_verify(
     return finish(
         ctx, draft, report, attempts=attempts, model=model, prompt_version=insight_prompt_version(ctx)
     )
+
+
+# Интерактивный прогон: столько утверждений можно скрыть без доработки (она стоит ~10 с ожидания).
+MAX_HIDDEN_WITHOUT_REVISE = 1
+
+
+def should_revise(ctx: AgentContext, draft: InsightDraft, report: VerificationReport, attempts: int) -> bool:
+    """Доработка нужна, если проверка не пройдена и попытки остались (§9.4).
+
+    Интерактивный прогон (клиент ждёт) обходится деградацией, если она скрывает не больше одного
+    утверждения и инсайт остаётся опубликованным.
+    """
+    if report.passed or attempts > ctx.limits.max_revisions:
+        return False
+    if ctx.priority != "interactive":
+        return True
+    dg = degrade(draft, report)
+    if dg.status == "published" and dg.removed_claims <= MAX_HIDDEN_WITHOUT_REVISE:
+        ctx.trace.emit("verify.check", "verify",
+                       "Доработка не нужна: неподтверждённое утверждение скрыто" if dg.removed_claims
+                       else "Доработка не нужна: замечания не влияют на публикацию",
+                       status="warn", payload={"removed": dg.removed_claims, "issues": report.issues[:10]})  # fmt: skip
+        return False
+    return True
 
 
 def finish(

@@ -496,17 +496,20 @@ class LLMRouter:
         failures: list[str] = []
         replay_miss = False
         invalid = False
-        for model in self.chain(task, exclude_families):
+
+        async def attempt(model: ModelConfig) -> StructuredResult[T] | None:
+            """Одна модель цепочки с одной попыткой починки; None — перейти к следующей."""
+            nonlocal replay_miss, invalid
             strat = choose_strategy(strategy or tcfg.strategy, self.capabilities(model.key))
             req = self._structured_request(base, schema, llm_schema, strat, model.key)
             try:
                 result = await self.complete(req)
             except LLMReplayMiss:
                 replay_miss = True
-                continue
+                return None
             except LLMUnavailable as exc:
                 failures.append(str(exc))
-                continue
+                return None
             try:
                 return StructuredResult[schema](  # type: ignore[valid-type]
                     value=self._parse(result, schema, strat), raw=result, strategy_used=strat, repaired=False
@@ -552,6 +555,19 @@ class LLMRouter:
                         error=str(exc)[:500],
                     )
                 )
+            return None
+
+        models = self.chain(task, exclude_families)
+        rest = models
+        if tcfg.hedge_after_s is not None and len(models) > 1 and not self.is_fake and self.mode == "live":
+            hedged = await _race(attempt(models[0]), lambda: attempt(models[1]), tcfg.hedge_after_s)
+            if hedged is not None:
+                return hedged
+            rest = models[2:]
+        for model in rest:
+            res = await attempt(model)
+            if res is not None:
+                return res
         if invalid:
             raise LLMInvalidOutput(
                 "Модели вернули ответ не по схеме", {"task": task, "errors": failures[-5:]}
@@ -559,3 +575,30 @@ class LLMRouter:
         if replay_miss and not failures:
             raise LLMReplayMiss(f"нет ответа в кеше для задачи {task}", {"task": task})
         raise LLMUnavailable("Все модели цепочки недоступны", {"task": task, "errors": failures[-5:]})
+
+
+async def _race[R](
+    first: Awaitable[R | None], second: Callable[[], Awaitable[R | None]], delay_s: float
+) -> R | None:
+    """Хедж-запрос: если первая модель не ответила за `delay_s`, параллельно запускается вторая.
+
+    Возвращается первый успешный результат, оставшийся запрос отменяется. None — обе не справились.
+    """
+    pending: set[asyncio.Future[R | None]] = {asyncio.ensure_future(first)}
+    try:
+        done, pending = await asyncio.wait(pending, timeout=delay_s)
+        if done:
+            res = done.pop().result()
+            return res if res is not None else await second()
+        pending.add(asyncio.ensure_future(second()))
+        while pending:
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            for t in done:
+                res = t.result()
+                if res is not None:
+                    return res
+        return None
+    finally:
+        for t in pending:
+            t.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)

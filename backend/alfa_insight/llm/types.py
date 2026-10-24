@@ -162,6 +162,8 @@ class TaskConfig(BaseModel):
     cache: bool = True
     # None — поведение модели по умолчанию; False — отключить рассуждения (дешевле и быстрее в разы)
     reasoning: bool | None = None
+    # Хедж (только structured): если первая модель цепочки молчит дольше, параллельно спрашиваем вторую
+    hedge_after_s: float | None = None
 
 
 class GatewayConfig(BaseModel):

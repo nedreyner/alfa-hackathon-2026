@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Callable
 from pathlib import Path
@@ -355,3 +356,45 @@ async def test_structured_next_model_then_invalid(tmp_path: Path) -> None:
     with pytest.raises(LLMInvalidOutput):
         await router.structured(task="draft", messages=MSGS, schema=Answer, prompt_version="v1")
     assert [p["model"] for p in backend.payloads] == ["a", "a", "b", "b"]
+
+
+class Delayed:
+    """Модель a отвечает через `delay_a` секунд, b — сразу."""
+
+    def __init__(self, delay_a: float):
+        self.delay_a = delay_a
+        self.started: list[str] = []
+        self.cancelled: list[str] = []
+
+    async def call(
+        self, model: ModelConfig, payload: dict[str, Any], timeout_s: float, request: LLMRequest
+    ) -> tuple[dict[str, Any], Literal["primary"]]:
+        self.started.append(model.key)
+        try:
+            if model.key == "a":
+                await asyncio.sleep(self.delay_a)
+        except asyncio.CancelledError:
+            self.cancelled.append(model.key)
+            raise
+        return ok_body(json.dumps({"answer": f"от {model.key}", "score": 1})), "primary"
+
+
+def hedged_router(tmp_path: Path, delay_a: float) -> tuple[LLMRouter, Delayed]:
+    cfg = make_config({"json_object": True})
+    cfg.tasks["draft"].hedge_after_s = 0.05
+    db = SqliteDB(tmp_path / "h.sqlite")
+    db.migrate()
+    backend = Delayed(delay_a)
+    return LLMRouter(cfg, backend, None, None), backend
+
+
+async def test_structured_hedge_second_model_wins(tmp_path: Path) -> None:
+    router, backend = hedged_router(tmp_path, delay_a=1.0)
+    res = await router.structured(task="draft", messages=MSGS, schema=Answer, prompt_version="v1")
+    assert res.value.answer == "от b" and backend.started == ["a", "b"] and backend.cancelled == ["a"]
+
+
+async def test_structured_hedge_not_needed_for_fast_model(tmp_path: Path) -> None:
+    router, backend = hedged_router(tmp_path, delay_a=0.0)
+    res = await router.structured(task="draft", messages=MSGS, schema=Answer, prompt_version="v1")
+    assert res.value.answer == "от a" and backend.started == ["a"]

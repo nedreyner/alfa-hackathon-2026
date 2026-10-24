@@ -28,7 +28,8 @@ models:
     capabilities: {tools: true, json_schema: true, json_object: true, vision: true, usage: true, reasoning_toggle: true}, token_param: max_tokens}
 tasks:
   tagging:             {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: background,  strategy: auto,        timeout_s: 30, reasoning: false}
-  tagging_interactive: {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: interactive, strategy: auto,        timeout_s: 20, reasoning: false}
+  tagging_interactive: {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: interactive, strategy: auto,        timeout_s: 20, reasoning: false,
+                        hedge_after_s: 4.5}
   research_extract:    {chain: [qwen_text, deepseek], temperature: 0,   max_tokens: 2000, priority: background,  strategy: auto,        timeout_s: 60, reasoning: false}
   ocr:                 {chain: [qwen_vl],             temperature: 0,   max_tokens: 4000, priority: background,  strategy: prompt_only, timeout_s: 150, reasoning: false, cache: false}
   vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 1500, priority: background,  strategy: json_object, timeout_s: 90, reasoning: false}

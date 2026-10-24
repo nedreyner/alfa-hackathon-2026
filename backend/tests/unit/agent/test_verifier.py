@@ -292,3 +292,21 @@ def test_internal_ids_stripped(actx: AgentContext) -> None:
     assert (
         fixed.consequences[0].claim.text == "Путь влияния указывает на рост затрат, это видно в источниках."
     )
+
+
+def test_should_revise_interactive_hides_single_claim(actx: AgentContext) -> None:
+    from alfa_insight.agent.pipeline_mode import should_revise
+
+    d = base_draft()
+    d["what_happened"]["facts"].append(claim("Аналитики оценили рынок проката в целом.", refs=["E3"]))
+    draft, report = asyncio.run(verify(actx, InsightDraft.model_validate(d), INPUTS))
+    assert not report.passed
+    actx.priority = "interactive"
+    assert not should_revise(actx, draft, report, attempts=1)
+    assert any(
+        t.type == "verify.check" and "Доработка не нужна" in t.title
+        for t in RunStore(actx.app.db).trace(actx.run_id)
+    )
+    actx.priority = "precompute"
+    assert should_revise(actx, draft, report, attempts=1)
+    assert not should_revise(actx, draft, report, attempts=2)  # попытки исчерпаны
