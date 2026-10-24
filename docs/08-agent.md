@@ -460,6 +460,8 @@ level = high, если ≥ 0.75; medium, если ≥ 0.5; иначе low;  need
 
 5. **Запись:** `insights` (`payload_json = Insight`, `verification_json = VerificationReport`), `agent_runs.status=succeeded`, `insight_id`, итоговые токены и стоимость, событие трассы `run.completed`.
 
+`prompt_version` инсайта режима pipeline — `{draft}+{verify}` (`draft_v1+verify_v1`): смена любого из двух промптов делает старые инсайты устаревшими (`stale`). Судья исключает семейство модели, написавшей черновик (`LLMResult.family`).
+
 ## 11. Трасса (`agent/trace.py`)
 
 ```python

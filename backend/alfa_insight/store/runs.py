@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import timedelta
 from typing import Any
 
 from pydantic import BaseModel
@@ -188,9 +189,16 @@ class RunStore:
         rows = self.db.query("SELECT status, count(*) AS n FROM agent_runs GROUP BY status")
         return {r["status"]: r["n"] for r in rows}
 
-    def recover_stale(self) -> int:
-        """После перезапуска процесса: running → failed(interrupted). queued остаются в очереди."""
-        ids = [r["id"] for r in self.db.query("SELECT id FROM agent_runs WHERE status = 'running'")]
+    def recover_stale(self, older_than_s: float = 0) -> int:
+        """При старте процесса: running старше `older_than_s` → failed(interrupted). queued остаются в очереди."""
+        cutoff = to_iso(utc_now() - timedelta(seconds=older_than_s))
+        ids = [
+            r["id"]
+            for r in self.db.query(
+                "SELECT id FROM agent_runs WHERE status = 'running' AND COALESCE(started_at, created_at) <= ?",
+                (cutoff,),
+            )
+        ]
         for run_id in ids:
             self.fail(run_id, "interrupted", "Разбор прерван, запустите заново")
             seq = self.last_seq(run_id) + 1

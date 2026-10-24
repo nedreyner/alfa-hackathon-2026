@@ -628,7 +628,7 @@ async def execute_tool_call(ctx: AgentContext, call: ToolCall) -> ToolResult:
     for item in result.evidence:
         ctx.trace.emit(
             "evidence.added", "tools",
-            f"Источник: {item.publisher or EvidenceRegistry.kind_label(item)}" + (f", {_day(item.published_at)}" if item.published_at else ""),
+            f"Источник: {item.publisher or item.title}" + (f", {_day(item.published_at)}" if item.published_at else ""),
             payload={"eid": item.eid, "source_id": item.source_id, "kind": item.kind, "title": item.title},
         )  # fmt: skip
     ctx.trace.emit(

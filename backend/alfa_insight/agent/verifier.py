@@ -489,7 +489,7 @@ _CLAIM_LINE = re.compile(
 
 
 @fake_handler("verify")
-def fake_verify(req: LLMRequest, payload: dict[str, Any]) -> dict[str, Any]:
+def fake_verify(req: LLMRequest, payload: dict[str, Any]) -> dict[str, Any] | None:
     """supported для всех утверждений; `[[UNSUPPORTED]]`, `[[PARTIAL]]`, `[[CONTRADICTED]]` в тексте меняют вердикт."""
     user = next(
         (m.content for m in reversed(req.messages) if m.role == "user" and isinstance(m.content, str)), ""
