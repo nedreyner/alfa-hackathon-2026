@@ -178,6 +178,22 @@ class RunStore:
         )
         return _run(row) if row else None
 
+    def latest_by_events(
+        self, company_id: str, event_ids: list[int], kind: str = "insight"
+    ) -> dict[int, RunRow]:
+        """Последний прогон по каждому событию (для статусов ленты)."""
+        if not event_ids:
+            return {}
+        marks = ", ".join("?" for _ in event_ids)
+        rows = self.db.query(
+            f"SELECT * FROM agent_runs WHERE company_id = ? AND kind = ? AND event_id IN ({marks}) ORDER BY created_at, id",
+            (company_id, kind, *event_ids),
+        )
+        out: dict[int, RunRow] = {}
+        for r in rows:
+            out[r["event_id"]] = _run(r)
+        return out
+
     def list_for_company(self, company_id: str, kind: str, *, limit: int = 20) -> list[RunRow]:
         rows = self.db.query(
             "SELECT * FROM agent_runs WHERE company_id = ? AND kind = ? ORDER BY created_at DESC, id DESC LIMIT ?",

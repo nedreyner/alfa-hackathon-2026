@@ -7,9 +7,10 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from alfa_insight.agent.schemas import Insight, Level, SourceKind
 from alfa_insight.data.models import CompanyProfile, IndustryShare
 from alfa_insight.llm.budget import BudgetMode
-from alfa_insight.ranking.models import Role
+from alfa_insight.ranking.models import Direction, ImpactLevel, Role
 
 
 class HealthResponse(BaseModel):
@@ -124,3 +125,145 @@ class OverridesUpdate(BaseModel):
     products: dict[str, bool] | None = None
     notes: str | None = Field(default=None, max_length=1000)
     reset: list[OverrideFieldName] = Field(default_factory=list)
+
+
+# ── лента (§4.3) ──
+class FeedItem(BaseModel):
+    event_id: int
+    status: Literal["ready", "pending", "generating", "failed"]
+    insight_id: str | None
+    run_id: str | None
+    headline: str
+    why_you: str | None
+    chain_preview: str | None
+    direction: Direction
+    impact_level: ImpactLevel
+    score: float
+    confidence_level: Level | None
+    event_title: str
+    event_type: str
+    published_at: datetime
+    publishers: list[str]
+    source_count: int
+    stale: bool
+    needs_review: bool
+
+
+class FeedResponse(BaseModel):
+    items: list[FeedItem]
+    next_cursor: str | None
+    total: int
+    generated_at: datetime
+    budget_mode: BudgetMode
+
+
+# ── инсайты, трасса, обратная связь (§4.4) ──
+FeedbackReason = Literal[
+    "not_relevant",
+    "already_known",
+    "wrong_facts",
+    "too_generic",
+    "unclear",
+    "useful_action",
+    "useful_risk",
+    "other",
+]
+
+
+class FeedbackIn(BaseModel):
+    useful: bool
+    reason: FeedbackReason | None = None
+    comment: str | None = Field(default=None, max_length=500)
+
+
+class FeedbackOut(FeedbackIn):
+    created_at: datetime
+
+
+class InsightDetailResponse(BaseModel):
+    insight: Insight
+    my_feedback: FeedbackOut | None
+    stale: bool
+
+
+class RunInfo(BaseModel):
+    id: str
+    kind: str
+    mode: str
+    status: str
+    event_id: int | None
+    insight_id: str | None
+    message_id: int | None
+    error_code: str | None
+    error_message: str | None
+    created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
+    duration_ms: int | None
+    cost_rub: float
+
+
+class TraceEventOut(BaseModel):
+    seq: int
+    ts: datetime
+    type: str
+    phase: str
+    title: str
+    status: Literal["ok", "warn", "error", "info"]
+    payload: dict[str, Any]
+    model: str | None
+    tokens_in: int | None
+    tokens_out: int | None
+    cost_rub: float | None
+    latency_ms: int | None
+
+
+class TraceResponse(BaseModel):
+    run: RunInfo
+    events: list[TraceEventOut]
+
+
+# ── источники, телеметрия, заявки (§4.7) ──
+class SourceDetail(BaseModel):
+    id: str
+    kind: SourceKind
+    title: str
+    publisher: str | None
+    url: str | None
+    published_at: datetime | None
+    excerpt: str
+    text: str | None
+    doc_title: str | None
+    page: int | None
+    data: dict[str, Any] | None
+
+
+UiEventType = Literal[
+    "feed_view",
+    "insight_open",
+    "source_open",
+    "trace_open",
+    "chat_open",
+    "brief_view",
+    "analyze_submit",
+    "product_open",
+]
+
+
+class UiEventIn(BaseModel):
+    type: UiEventType
+    insight_id: str | None = Field(default=None, max_length=64)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class LeadIn(BaseModel):
+    product_id: str = Field(max_length=64)
+    insight_id: str | None = Field(default=None, max_length=64)
+    comment: str | None = Field(default=None, max_length=500)
+    confirm: Literal[True]
+
+
+class LeadOut(BaseModel):
+    id: int
+    product_name: str
+    message: str

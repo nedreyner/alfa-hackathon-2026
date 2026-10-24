@@ -13,13 +13,26 @@ from fastapi.routing import APIRoute
 from alfa_insight import __version__
 from alfa_insight.api import errors
 from alfa_insight.api.ratelimit import RateLimiter
-from alfa_insight.api.routes import companies, profile, reference, session, system
+from alfa_insight.api.routes import (
+    companies,
+    feed,
+    insights,
+    profile,
+    reference,
+    session,
+    sources,
+    system,
+    telemetry,
+)
 from alfa_insight.appctx import AppContext, build_context
 from alfa_insight.log import get_logger
 from alfa_insight.services.jobs import JobRunner
 
 log = get_logger("api.app")
-ROUTERS = [system.router, companies.router, session.router, reference.router, profile.router]
+ROUTERS = [
+    system.router, companies.router, session.router, reference.router, profile.router, feed.router,
+    insights.router, sources.router, telemetry.router,
+]  # fmt: skip
 
 
 def _operation_id(route: APIRoute) -> str:

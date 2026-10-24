@@ -25,6 +25,10 @@ class NotFoundError(AppError):
     http_status = 404
 
 
+class InsightNotReady(NotFoundError):
+    code = "insight_not_ready"
+
+
 class ForbiddenError(AppError):
     code = "forbidden"
     http_status = 403
