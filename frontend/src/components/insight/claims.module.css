@@ -37,7 +37,7 @@
 
 .bank {
   background: var(--ai-bank-bg);
-  color: var(--ai-accent);
+  color: var(--ai-accent-text);
 }
 
 .ai {

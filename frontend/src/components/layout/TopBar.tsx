@@ -52,14 +52,14 @@ export function TopBar() {
         </nav>
         <div className={styles.right}>
           <RoleSwitcher compact />
-          <button
-            type="button"
-            className={styles.exit}
-            onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/login') })}
-          >
-            Выйти
-          </button>
         </div>
+        <button
+          type="button"
+          className={styles.exit}
+          onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/login') })}
+        >
+          Выйти
+        </button>
       </div>
     </header>
   );

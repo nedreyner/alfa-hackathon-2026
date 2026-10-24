@@ -97,3 +97,28 @@
     flex-wrap: nowrap;
   }
 }
+
+/* Телефон: логотип и «Выйти» в первой строке, роли — во второй на всю ширину, разделы — в третьей */
+@media (max-width: 640px) {
+  .inner {
+    gap: 10px 12px;
+    padding: 10px 16px;
+  }
+  .exit {
+    order: 1;
+    margin-left: auto;
+  }
+  .right {
+    order: 2;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .right > * {
+    width: 100%;
+  }
+  .nav {
+    margin: 0 -16px;
+    padding: 0 16px;
+    scrollbar-width: none;
+  }
+}

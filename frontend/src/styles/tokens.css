@@ -1,15 +1,17 @@
 :root {
   --ai-accent: var(--color-light-accent-primary, #ef3124);
   --ai-text: var(--color-light-text-primary, #0e0e10);
-  --ai-text-secondary: var(--color-light-text-secondary, #86868a);
+  /* Цвета текста подобраны под контраст ≥ 4.5:1 на подложках карточек (WCAG AA, Lighthouse) */
+  --ai-text-secondary: #5f5f66;
+  --ai-accent-text: #c8231a;
   --ai-bg: var(--color-light-bg-primary, #ffffff);
   --ai-bg-subtle: var(--color-light-bg-secondary, #f3f4f5);
   --ai-border: #e7e8eb;
   --ai-risk: #d4200c;
   --ai-risk-bg: #fdedeb;
-  --ai-opportunity: #0b8f43;
+  --ai-opportunity: #087a3a;
   --ai-opportunity-bg: #e8f6ee;
-  --ai-mixed: #6e6e73;
+  --ai-mixed: #5f5f66;
   --ai-mixed-bg: #f1f1f3;
   --ai-bank-bg: #fdecea;
   --ai-warn: #c98a00;

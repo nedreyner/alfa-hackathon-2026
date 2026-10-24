@@ -1,7 +1,7 @@
 import { Button } from '@alfalab/core-components/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { useGenerateInsight } from '../../api/hooks';
 import { useRunEvents } from '../../api/sse';
@@ -29,20 +29,16 @@ function Meta({ item }: { item: FeedItem }) {
   );
 }
 
+/** Карточка целиком кликабельна через «растянутую» ссылку в заголовке: семантика ссылки и фокус с клавиатуры. */
 function ReadyCard({ item }: { item: FeedItem }) {
-  const navigate = useNavigate();
-  const open = () => navigate(`/insights/${item.insight_id}`);
   return (
-    <article
-      className={`${styles.card} ${styles.clickable} appear`}
-      role="link"
-      tabIndex={0}
-      onClick={open}
-      onKeyDown={(e) => e.key === 'Enter' && open()}
-      aria-label={item.headline}
-    >
+    <article className={`${styles.card} ${styles.clickable} appear`}>
       <Meta item={item} />
-      <h2 className={styles.headline}>{item.headline}</h2>
+      <h2 className={styles.headline}>
+        <Link to={`/insights/${item.insight_id}`} className={styles.stretched}>
+          {item.headline}
+        </Link>
+      </h2>
       {item.why_you && <p className={styles.why}>{item.why_you}</p>}
       <ChainPreview text={item.chain_preview} />
       <div className={styles.footer}>

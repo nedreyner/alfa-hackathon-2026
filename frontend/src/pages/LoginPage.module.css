@@ -69,7 +69,8 @@
   bottom: 0;
   margin-top: 28px;
   padding: 16px 0;
-  background: linear-gradient(to top, var(--ai-bg) 70%, transparent);
+  background: var(--ai-bg);
+  box-shadow: 0 -24px 24px -8px var(--ai-bg);
   display: flex;
   flex-direction: column;
   align-items: center;

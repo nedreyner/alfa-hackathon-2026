@@ -29,7 +29,7 @@ function BriefRow({ item, expanded }: { item: BriefItem; expanded: boolean }) {
             <strong>{item.action.title}</strong> ·{' '}
             <span className="secondary">{URGENCY[item.action.urgency]}</span>
             {item.product && (
-              <div className="caption" style={{ color: 'var(--ai-accent)' }}>
+              <div className="caption" style={{ color: 'var(--ai-accent-text)' }}>
                 Альфа-Банк: {item.product.name}
               </div>
             )}

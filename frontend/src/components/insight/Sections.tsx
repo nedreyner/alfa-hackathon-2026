@@ -186,7 +186,10 @@ export function BankViewBlock({ insight }: { insight: Insight }) {
   return (
     <div className={styles.bank}>
       <div className="row" style={{ marginBottom: 10 }}>
-        <span className={styles.chip} style={{ borderColor: 'var(--ai-accent)', color: 'var(--ai-accent)' }}>
+        <span
+          className={styles.chip}
+          style={{ borderColor: 'var(--ai-accent)', color: 'var(--ai-accent-text)' }}
+        >
           {ALIGNMENT[bv.alignment]}
         </span>
       </div>

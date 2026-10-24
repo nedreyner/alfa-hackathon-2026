@@ -36,6 +36,9 @@ describe('InsightCard', () => {
   it('ready: headline, why, chain, labels', () => {
     renderWithProviders(<InsightCard item={base} />);
     expect(screen.getByRole('heading', { name: base.headline })).toBeTruthy();
+    expect(screen.getByRole('link', { name: base.headline }).getAttribute('href')).toBe(
+      `/insights/${base.insight_id}`,
+    );
     expect(screen.getByText(base.why_you!, { selector: 'p' })).toBeTruthy();
     expect(screen.getByText('Риск')).toBeTruthy();
     expect(screen.getByText('Влияние: высокое')).toBeTruthy();

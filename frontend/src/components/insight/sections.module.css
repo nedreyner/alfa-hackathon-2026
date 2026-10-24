@@ -64,7 +64,7 @@
   border-radius: 999px;
   border: 1px solid var(--ai-accent);
   background: var(--ai-bg);
-  color: var(--ai-accent);
+  color: var(--ai-accent-text);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
