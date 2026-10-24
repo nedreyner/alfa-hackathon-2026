@@ -139,3 +139,26 @@ async def test_tag_batch_fake(ctx) -> None:  # type: ignore[no-untyped-def]
     assert store.get(ids[2]).status == "filtered_out"  # type: ignore[union-attr]
     assert ctx.db.scalar("SELECT count(*) FROM news_fts WHERE news_fts MATCH 'арматура'") == 1
     assert tags["prompt_version"].startswith("tagging_v1+tx")
+
+
+def test_seed_prompt_date_stable_across_reloads(settings) -> None:  # type: ignore[no-untyped-def]
+    """Ключ LLM-кеша разметки seed не меняется при перезагрузке со сдвигом дат к «сейчас»."""
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from alfa_insight.appctx import build_context
+    from alfa_insight.ingest.seed import load_seed, read_seed
+    from alfa_insight.ingest.tagging import render_tagging
+    from alfa_insight.store.news import NewsStore
+
+    path = Path(__file__).resolve().parents[2] / "fixtures" / "seed_mini.jsonl"
+    original = {i.seed_id: i.published_at for i in read_seed(path)}
+    ctx = build_context(settings)
+    store = NewsStore(ctx.db)
+    prompts = []
+    for now in (datetime(2026, 10, 24, 1, 0, tzinfo=UTC), datetime(2026, 11, 2, 9, 30, tzinfo=UTC)):
+        load_seed(ctx, path, shift_to_now=True, now=now)
+        row = store.by_status("extracted", 1, newest_first=False)[0]
+        prompts.append(render_tagging(ctx, row)[1][-1].content)
+        assert original[row.external_id][:16] in prompts[-1]  # type: ignore[index]
+    assert prompts[0] == prompts[1]

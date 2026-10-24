@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from datetime import timedelta
 from typing import Any
 
 from alfa_insight.appctx import AppContext
@@ -24,6 +25,7 @@ from alfa_insight.reference.taxonomy import UNKNOWN, Taxonomy
 from alfa_insight.store.news import NewsRow, NewsStore
 from alfa_insight.text.lemmatizer import lemmas_str, lemmatize
 from alfa_insight.text.numbers import extract_numbers
+from alfa_insight.timeutil import parse_dt, to_iso
 
 log = get_logger("ingest.tagging")
 TAG_CONCURRENCY = 4
@@ -40,11 +42,21 @@ def taxonomy_ctx(tax: Taxonomy) -> dict[str, Any]:
     }
 
 
+def prompt_published_at(ctx: AppContext, row: NewsRow) -> str:
+    """Дата для промпта. У seed — исходная (до сдвига к «сейчас»): так ключ LLM-кеша не меняется при перезагрузке seed."""
+    if row.origin != "seed":
+        return row.published_at
+    from alfa_insight.ingest.seed import SEED_SHIFT_KEY
+
+    shift = float(ctx.kv.get(SEED_SHIFT_KEY, 0) or 0)
+    return to_iso(parse_dt(row.published_at) - timedelta(seconds=shift)) if shift else row.published_at
+
+
 def render_tagging(ctx: AppContext, row: NewsRow) -> tuple[str, list[Any]]:
     rendered = ctx.prompts.render(
         "tagging",
         publisher=row.publisher,
-        published_at=row.published_at,
+        published_at=prompt_published_at(ctx, row),
         categories=row.rss_categories,
         title=row.title,
         body=(row.body or "")[: ctx.settings.tag_body_chars],
