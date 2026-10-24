@@ -14,6 +14,7 @@ from alfa_insight import __version__
 from alfa_insight.api import errors
 from alfa_insight.api.ratelimit import RateLimiter
 from alfa_insight.api.routes import (
+    admin,
     companies,
     feed,
     insights,
@@ -33,6 +34,7 @@ log = get_logger("api.app")
 ROUTERS = [
     system.router, companies.router, session.router, reference.router, profile.router, feed.router,
     insights.router, sources.router, telemetry.router, runs.router,
+    admin.router, admin.admin,
 ]  # fmt: skip
 
 

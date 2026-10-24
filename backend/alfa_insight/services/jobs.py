@@ -71,6 +71,7 @@ class JobRunner:
     _active: int = 0
     _tasks: set[asyncio.Task[RunRow]] = field(default_factory=set)
     _sem: asyncio.Semaphore | None = None
+    _background: set[asyncio.Task[Any]] = field(default_factory=set)
     fetch_options: dict[str, Any] = field(default_factory=dict)  # тесты фичи B: transport, resolver
 
     @property
@@ -243,9 +244,17 @@ class JobRunner:
         await asyncio.gather(*(worker() for _ in range(concurrency)))
         return done
 
+    def spawn_background(self, coro: Any) -> asyncio.Task[Any]:
+        """Фоновая служебная задача (админка): не считается интерактивным прогоном."""
+        task = asyncio.get_running_loop().create_task(coro)
+        self._background.add(task)
+        task.add_done_callback(self._background.discard)
+        return task
+
     async def wait_all(self) -> None:
-        if self._tasks:
-            await asyncio.gather(*list(self._tasks), return_exceptions=True)
+        pending = [*self._tasks, *self._background]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
 
 
 # ── прекомпьют (§1.3) ──

@@ -11,6 +11,7 @@ from alfa_insight.agent.schemas import ChatAnswer, Insight, Level, SourceKind, S
 from alfa_insight.data.models import CompanyProfile, IndustryShare
 from alfa_insight.llm.budget import BudgetMode
 from alfa_insight.ranking.models import Direction, ImpactLevel, Role
+from alfa_insight.store.macro import MacroSummary
 
 
 class HealthResponse(BaseModel):
@@ -312,3 +313,42 @@ class ChatMessageOut(BaseModel):
 class ChatThreadResponse(BaseModel):
     thread_id: str | None
     messages: list[ChatMessageOut]
+
+
+# ── макро и админка (§4.7, §3) ──
+class MacroResponse(BaseModel):
+    key_rate: MacroSummary | None
+    fx: list[MacroSummary]
+    updated_at: datetime | None
+
+
+class ReviewItem(BaseModel):
+    insight_id: str
+    company_id: str
+    event_id: int
+    headline: str
+    status: str
+    confidence_level: str
+    supported_share: float | None
+    removed_claims: int
+    created_at: datetime
+    review_note: str | None
+
+
+class ReviewIn(BaseModel):
+    status: Literal["published", "rejected"]
+    note: str | None = Field(default=None, max_length=500)
+
+
+class PrecomputeIn(BaseModel):
+    companies: list[str] | None = None
+    top_k: int | None = Field(default=None, ge=1, le=20)
+
+
+class SourceStatus(BaseModel):
+    ok: bool | None = None
+    last_ok_at: str | None = None
+    last_error: str | None = None
+    last_error_at: str | None = None
+    items_total: int | None = None
+    items_new: int | None = None
