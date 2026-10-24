@@ -12,6 +12,7 @@ from alfa_insight.agent.evidence import KIND_LABELS
 from alfa_insight.agent.pipeline_mode import (
     ROLE_TEXT,
     collect_base,
+    collect_rest,
     draft_and_verify,
     expected_impact,
     finish,
@@ -195,6 +196,8 @@ async def run_agentic(ctx: AgentContext, *, weak_note: str | None = None) -> Ins
         ctx.trace.emit("plan", "plan", "Модели без поддержки инструментов — перехожу в пакетный режим",
                        status="warn", payload={"text": "fallback: pipeline"})  # fmt: skip
         return await draft_and_verify(ctx, candidates, event=event)
+    # Шаги 4–7 pipeline — до первого раунда: обычно модели хватает одного раунда (§7, задержка фичи B).
+    await collect_rest(ctx, event)
     ctx.tool_calls = 0  # предзагрузка не входит в лимит модели
     loop = AgentLoop.for_insight(ctx, candidates, weak_note)
     ctx.trace.phase("tools", "Исследую тему")

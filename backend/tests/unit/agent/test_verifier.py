@@ -108,6 +108,21 @@ def test_clean_draft(actx: AgentContext) -> None:
     assert len(report.verdicts) == len(InsightDraft.model_validate(base_draft()).claims())
 
 
+def test_numbers_autofix_attaches_source(actx: AgentContext) -> None:
+    """Число есть в другом evidence (ставка ЦБ) — ссылка добавляется, утверждение не удаляется."""
+    d = base_draft()
+    d["bank_view"]["claims"][0]["text"] = "Аналитики банка ожидают роста цен на сталь на 5–7% при ставке 14%."
+    fixed, r = checks(actx, d)
+    assert r["numbers_match"].status == "warn" and r["numbers_match"].paths == ["bank_view.claims[0]"]
+    assert fixed.bank_view.claims[0].refs == ["E3", "E4"]
+    assert r["bank_has_alfa"].status == "pass"
+
+    # числа нет ни в одном evidence — fail, ссылки не трогаются
+    d["bank_view"]["claims"][0]["text"] = "Аналитики банка ожидают роста цен на сталь на 5–7% при ставке 17%."
+    fixed, r = checks(actx, d)
+    assert r["numbers_match"].status == "fail" and fixed.bank_view.claims[0].refs == ["E3"]
+
+
 def test_each_check(actx: AgentContext) -> None:
     d = base_draft()
     d["what_happened"]["facts"].append(

@@ -126,6 +126,39 @@ def claim_problems(c: Claim, reg: EvidenceRegistry, allowed_domains: set[str]) -
     return problems
 
 
+MAX_REFS = 6
+# Порядок, в котором ищется источник для числа: данные ЦБ и клиента точнее новостей.
+_NUMBER_SOURCE_ORDER = {"cbr": 0, "client_data": 1, "news": 2, "user_input": 2, "alfa": 3}
+
+
+def attach_number_refs(c: Claim, reg: EvidenceRegistry) -> bool:
+    """Если числа нет в процитированных evidence, но оно есть в другом evidence, — добавить ссылку.
+
+    Срабатывает, только когда так находятся все недостающие числа и хватает места в `refs`;
+    верность ссылки затем проверяет LLM-судья.
+    """
+    nums = [n for e in _cited(reg, c) for n in e.numbers]
+    absent = [m.value for m in extract_numbers(c.text) if not number_supported(m.value, nums)]
+    if not absent:
+        return False
+    pool = sorted(
+        (e for e in reg.all() if e.eid not in c.refs and e.kind in _NUMBER_SOURCE_ORDER),
+        key=lambda e: _NUMBER_SOURCE_ORDER[e.kind],
+    )
+    extra: list[str] = []
+    for value in absent:
+        if any(number_supported(value, reg.get(x).numbers) for x in extra):  # type: ignore[union-attr]
+            continue
+        hit = next((e for e in pool if number_supported(value, e.numbers)), None)
+        if hit is None:
+            return False
+        extra.append(hit.eid)
+    if len(c.refs) + len(extra) > MAX_REFS:
+        return False
+    c.refs = [*c.refs, *extra]
+    return True
+
+
 def _cited(reg: EvidenceRegistry, claim: Claim) -> list[EvidenceItem]:
     return [e for e in (reg.get(r) for r in claim.refs) if e is not None]
 
@@ -164,20 +197,27 @@ def deterministic_checks(
     ch.add("ai_has_confidence", "warn" if fixed else "pass",
            "Для выводов ИИ не указана уверенность — поставлено «medium»" if fixed else "У выводов ИИ указана уверенность", fixed)  # fmt: skip
 
-    # numbers_match
+    # numbers_match (автоисправление: ссылка на evidence, где число есть)
     fail_paths: list[str] = []
     warn_paths: list[str] = []
     missing_numbers: list[str] = []
+    attached = [p for p, c in claims if c.type in ("fact", "bank") and attach_number_refs(c, reg)]
     for p, c in claims:
         nums = [e for ev in _cited(reg, c) for e in ev.numbers]
         absent = [m.raw for m in extract_numbers(c.text) if not number_supported(m.value, nums)]
         if absent:
             (fail_paths if c.type in ("fact", "bank") else warn_paths).append(p)
             missing_numbers.append(f"{p}: {', '.join(absent)}")
-    status = "fail" if fail_paths else "warn" if warn_paths else "pass"
-    ch.add("numbers_match", status,
-           ("Чисел нет в процитированных источниках — " + "; ".join(missing_numbers)) if missing_numbers
-           else "Числа сверены с источниками", fail_paths + warn_paths)  # fmt: skip
+    status = "fail" if fail_paths else "warn" if warn_paths or attached else "pass"
+    message = (
+        ("Чисел нет в процитированных источниках — " + "; ".join(missing_numbers))
+        if missing_numbers
+        else "Числа сверены с источниками"
+    )
+    if attached:
+        message += f"; добавлены ссылки на источники чисел: {', '.join(attached)}"
+    # при fail пути удаляются (§9.5) — исправленные утверждения туда не попадают
+    ch.add("numbers_match", status, message, fail_paths + warn_paths + ([] if fail_paths else attached))
 
     # features_exist
     used = d.why_it_matters.client_features_used

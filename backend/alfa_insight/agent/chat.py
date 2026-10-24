@@ -10,7 +10,7 @@ from alfa_insight.agent.context import AgentContext
 from alfa_insight.agent.evidence import KIND_LABELS, EvidenceItem
 from alfa_insight.agent.render import evidence_block, profile_brief
 from alfa_insight.agent.schemas import ChatAnswer, Claim, Insight
-from alfa_insight.agent.verifier import _domain, claim_problems
+from alfa_insight.agent.verifier import _domain, attach_number_refs, claim_problems
 from alfa_insight.errors import NotFoundError
 from alfa_insight.llm.prompts import sanitize_untrusted
 from alfa_insight.llm.types import Message
@@ -106,6 +106,9 @@ def build_messages(
 def check_answer(ctx: AgentContext, answer: ChatAnswer) -> tuple[ChatAnswer, int]:
     """§13 п. 4: блоки с fail по refs/источнику/числам/URL удаляются; все удалены — один блок ai."""
     domains = {d for d in (_domain(e.url) for e in ctx.evidence.all() if e.url) if d}
+    for b in answer.blocks:
+        if b.type in ("fact", "bank"):
+            attach_number_refs(b, ctx.evidence)
     kept = [b for b in answer.blocks if not claim_problems(b, ctx.evidence, domains)]
     removed = len(answer.blocks) - len(kept)
     if not kept:

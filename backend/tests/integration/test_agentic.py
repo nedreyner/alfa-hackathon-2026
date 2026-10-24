@@ -86,7 +86,10 @@ def test_two_rounds_to_insight(app) -> None:  # type: ignore[no-untyped-def]
         "verify.report",
         "run.completed",
     } <= set(types)
-    model_tools = [t.payload["tool"] for t in trace if t.type == "tool.call"][3:]
+    start = next(i for i, t in enumerate(trace) if t.type == "phase.started" and t.title == "Исследую тему")
+    prefetch = [t.payload["tool"] for t in trace[:start] if t.type == "tool.call"]
+    assert prefetch[:4] == ["get_event", "get_company_profile", "compute_exposure", "search_alfa_research"]
+    model_tools = [t.payload["tool"] for t in trace[start:] if t.type == "tool.call"]
     assert model_tools[:2] == ["search_alfa_research", "get_macro"] and "submit_insight" in model_tools
     plans = [t.payload["text"] for t in trace if t.type == "plan"]
     assert any("аналитиков банка" in p for p in plans)

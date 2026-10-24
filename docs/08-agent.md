@@ -220,6 +220,7 @@ async def execute_tool_call(ctx: AgentContext, call: ToolCall) -> ToolResult
 
 ```
 prefetch: get_event, get_company_profile, compute_exposure       (как в pipeline, шаги 1–3)
+prefetch: collect_rest — аналитика банка, ставка и курсы, контрагенты (шаги 4–7, параллельно)
 messages = [system: agent.system, user: agent.user(evidence_block, chain_block, products_block)]
 tools = [get_event, get_counterparties, search_news, search_alfa_research, get_macro,
          get_related_group, submit_insight]
@@ -240,6 +241,7 @@ for round in 1..max_tool_rounds:
 verify → (revise: дописать revise.user, ещё один раунд, затем принудительный submit) → finalize
 ```
 
+- Предзагрузка шагов 4–7 нужна ради задержки фичи B (цель p50 ≤ 20 с): обычно модели хватает собранного и она вызывает `submit_insight` в первом же раунде; дополнительные инструменты она вызывает, только если для гипотезы не хватает данных. Вызовы предзагрузки не входят в `max_tool_calls`.
 - Если модель вернула и текст, и `tool_calls`, текст считается планом. Если раунд 1 пришёл без текста, план собирается из вызовов: «Проверю: позицию аналитиков банка; курс CNY».
 - Несколько вызовов в одном ответе выполняются параллельно. Порядок tool-сообщений совпадает с порядком `tool_calls`.
 - Каждый следующий вызов LLM проверяет бюджет прогона. При `BudgetExceeded(scope="run")` сразу идёт принудительный `submit_insight`.
@@ -372,7 +374,7 @@ class Insight(InsightDraft):                      # те же блоки, refs �
 | `fact_has_source` | У `fact` есть хотя бы один ref вида `news`, `cbr`, `client_data` или `user_input` | fail |
 | `bank_has_alfa` | У `bank` есть хотя бы один ref вида `alfa` | fail |
 | `ai_has_confidence` | У `ai` задан `confidence` | warn, автоисправление: `medium` |
-| `numbers_match` | Каждое значимое число в `fact` и `bank` есть среди чисел процитированных evidence (допуск ±0.5%) | fail для fact и bank, warn для ai |
+| `numbers_match` | Каждое значимое число в `fact` и `bank` есть среди чисел процитированных evidence (допуск ±0.5%) | fail для fact и bank, warn для ai. Автоисправление: если все недостающие числа есть в других evidence (порядок поиска: ЦБ, данные клиента, новости, аналитика банка) и в `refs` хватает места — ссылки добавляются, warn |
 | `features_exist` | `client_features_used` ⊂ ключей признаков профиля | неизвестные удаляются; если список опустел — fail |
 | `chain_ids_exist` | `chain_ids` ⊂ id путей | warn, удалить лишние |
 | `completeness` | facts ≥ 1, есть `why_it_matters.summary`, consequences ≥ 1, actions ≥ 1 | fail |
@@ -519,6 +521,8 @@ class AnalyzeInput(BaseModel):
 
 Цель — первый шаг в интерфейсе через 1 с и готовый инсайт за 20 с. Жёсткий таймаут — 45 с, при нём `failed: timeout`.
 
+**Замер 24.10.2026 (живой шлюз, 9 свежих ссылок из RSS):** все успешны, p50 ≈ 28–31 с, максимум 36 с, 0,3–0,6 ₽. Задержка — сумма трёх последовательных вызовов LLM: разметка Gemma 5–12 с (скорость шлюза колеблется), черновик DeepSeek 9–11 с, судья GLM 6–8 с. Ускорения `agent_v3`: предзагрузка шагов 4–7 (модель сдаёт черновик в первом раунде), подсказка о размере черновика, автоисправление ссылок на числа (§9.1) вместо доработки. Цель 20 с не достигнута; следующие шаги — хедж-запрос разметки к двум моделям и краткие комментарии судьи.
+
 Уточнения реализации: для вставленного текста порог шага 3 — 200 символов (как в `AnalyzeInput`). Если URL уже есть в базе как чужая приватная копия, своя новость пишется без `url` (уникальность `url_hash`). Строка `rankings` для приватного события пишется для трёх ролей даже при relevance ниже порога хранения. `prompt_version` инсайта режима agentic — `{agent}+{verify}`; при откате в pipeline — `{draft}+{verify}`.
 
 ## 13. Чат (`agent/chat.py`)
@@ -532,7 +536,7 @@ class ChatAnswer(BaseModel):
 1. Загрузить инсайт (проверить компанию сессии) и его `sources`. Восстановить реестр evidence в порядке источников инсайта: E1..En. Тексты берутся из исходных таблиц: `news.body`, `research_chunks.text`, `macro_series`, `sources.excerpt` для `client_data`.
 2. История треда — последние 6 сообщений.
 3. Цикл как в §7, до 3 раундов. Инструменты: `open_evidence`, `search_news`, `search_alfa_research`, `get_macro`, `get_counterparties`, `compute_exposure` (только текущее событие), `submit_answer`.
-4. Детерминированные проверки из §9.1: `refs_exist`, `fact_has_source`, `bank_has_alfa`, `numbers_match`, `no_foreign_urls`. Не прошедший блок удаляется. Если удалены все, ответ заменяется одним блоком `ai`: «Не могу ответить на это с опорой на источники». LLM-судья в чате не вызывается ради скорости.
+4. Детерминированные проверки из §9.1: `refs_exist`, `fact_has_source`, `bank_has_alfa`, `numbers_match` (с автоисправлением ссылок на числа), `no_foreign_urls`. Не прошедший блок удаляется. Если удалены все, ответ заменяется одним блоком `ai`: «Не могу ответить на это с опорой на источники». LLM-судья в чате не вызывается ради скорости.
 5. Сохранить `chat_messages(role=assistant, content_json = ChatAnswer с refs → source_id)`, сделать upsert новых `sources`, `run.completed {message_id}`.
 
 Сборка сообщений: `system` + `chat.user` (контекст инсайта и **первый** вопрос окна из 6 последних сообщений) + остальная история (вопросы — текстом, ответы — текстом блоков) + текущий вопрос. Так контекст инсайта есть в каждом запросе, даже если начало треда выпало из окна. Цикл — тот же `AgentLoop`, что в §7 (терминальный инструмент `submit_answer`); `compute_exposure` в чате разрешён только для события инсайта. Сообщение пользователя пишется в `chat_messages` до запуска прогона (`start_chat` → `user_message_id`).
