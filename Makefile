@@ -1,4 +1,4 @@
-.PHONY: setup check test data seed dev-api dev-worker dev-web openapi up down eval
+.PHONY: setup check test data seed dev-api dev-worker dev-web openapi up down eval notices
 
 setup:
 	cd backend && uv sync
@@ -42,3 +42,14 @@ down:
 
 eval:
 	cd backend && uv run alfa eval ranking --baselines && uv run alfa eval report
+
+# THIRD_PARTY_NOTICES.md: рантайм-зависимости Python (без dev) и production-зависимости JS
+notices:
+	cd backend && UV_PROJECT_ENVIRONMENT=$(CURDIR)/.notices-venv uv sync --frozen --no-dev --no-install-project -q \
+	  && uv pip install -q --python $(CURDIR)/.notices-venv/bin/python pip-licenses \
+	  && $(CURDIR)/.notices-venv/bin/pip-licenses --format=markdown --with-urls --order=license \
+	     --ignore-packages pip-licenses prettytable wcwidth tomli > $(CURDIR)/.notices-py.md
+	cd frontend && npx -y license-checker@25.0.1 --production --json > $(CURDIR)/.notices-js.json
+	python3 scripts/third_party_notices.py .notices-py.md .notices-js.json
+	rm -rf .notices-venv .notices-py.md .notices-js.json
+

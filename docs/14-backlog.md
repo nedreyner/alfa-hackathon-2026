@@ -104,7 +104,7 @@
 | T6.2 | Скрипты оценки и отчёт | P0 | T6.1, T3.8 | [x] |
 | T6.3 | Docker, compose, nginx, `alfa init`, `alfa worker` | P0 | T4.13 | [x] |
 | T6.4 | CI полностью | P0 | T6.3 | [ ] |
-| T6.5 | README, THIRD_PARTY_NOTICES, LICENSE | P0 | T6.3, T6.2 | [ ] |
+| T6.5 | README, THIRD_PARTY_NOTICES, LICENSE | P0 | T6.3, T6.2 | [x] |
 | T6.6 | Развёртывание, смоук, план Б, тег версии | P0 | T6.3, T5.5 | [ ] |
 
 ## 4. Этап 0 — подготовка (люди)
