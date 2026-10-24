@@ -228,47 +228,14 @@ curl -fsS https://insight.<домен>/api/ready
 
 ## 5. CI (`.github/workflows/ci.yml`)
 
-```yaml
-name: ci
-on: [push, pull_request]
-jobs:
-  backend:
-    runs-on: ubuntu-latest
-    defaults: {run: {working-directory: backend}}
-    env: {LLM_MODE: fake}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with: {python-version: "3.12"}
-      - run: uv sync --frozen
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run mypy alfa_insight
-      - run: uv run pytest -q
-      - run: uv run alfa api openapi --out /tmp/openapi.json && diff -q /tmp/openapi.json ../frontend/openapi.json
-  frontend:
-    runs-on: ubuntu-latest
-    defaults: {run: {working-directory: frontend}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: {node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json}
-      - run: npm ci
-      - run: npm run gen:api && git diff --exit-code src/api/schema.d.ts
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-  docker:
-    if: github.ref == 'refs/heads/main'
-    needs: [backend, frontend]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker compose build
-```
+Четыре задачи на каждый push и PR:
 
-Отдельная задача `secrets` — `gitleaks` по всей истории (`gitleaks/gitleaks-action@v2`).
+- `backend`: `uv sync --frozen`, ruff (check и format), mypy, pytest на `LLM_MODE=fake`, сверка `frontend/openapi.json` с кодом (`alfa api openapi` + `diff`).
+- `frontend`: `npm ci`, `npm run gen:api` и `git diff --exit-code src/api/schema.d.ts`, lint, typecheck, тесты, сборка.
+- `secrets`: `gitleaks/gitleaks-action@v2` по всей истории (`fetch-depth: 0`) с конфигом `.gitleaks.toml`: стандартные правила плюс одно исключение — ключи кеша LLM (`"key": "<sha256>"` в `data/seed/llm_cache_demo.jsonl`), которые правило `generic-api-key` принимает за секреты.
+- `docker` (только `main`, после `backend` и `frontend`): `cp .env.example .env` (compose требует `env_file`) и `docker compose build`.
+
+Права токена — `contents: read`, `pull-requests: read`.
 
 ## 6. Демо
 

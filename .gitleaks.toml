@@ -1,0 +1,8 @@
+# gitleaks: стандартные правила + исключение ключей кеша LLM (sha256 в поле "key" файла data/seed/llm_cache_demo.jsonl)
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ключи кеша LLM — sha256 запроса, не секреты"
+regexTarget = "match"
+regexes = ['''key": "[0-9a-f]{64}"?''']

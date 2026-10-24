@@ -103,7 +103,7 @@
 | T6.1 | Разметка офлайн-набора | P0 | T3.2, T2.8 | [ ] |
 | T6.2 | Скрипты оценки и отчёт | P0 | T6.1, T3.8 | [x] |
 | T6.3 | Docker, compose, nginx, `alfa init`, `alfa worker` | P0 | T4.13 | [x] |
-| T6.4 | CI полностью | P0 | T6.3 | [ ] |
+| T6.4 | CI полностью | P0 | T6.3 | [x] |
 | T6.5 | README, THIRD_PARTY_NOTICES, LICENSE | P0 | T6.3, T6.2 | [x] |
 | T6.6 | Развёртывание, смоук, план Б, тег версии | P0 | T6.3, T5.5 | [ ] |
 
@@ -570,11 +570,11 @@
 - [x] Из чистого клона: `cp .env.example .env` (`LLM_MODE=replay`) и `docker compose up -d --build` → интерфейс на `:8080`, SSE через nginx работает (живая трасса не приходит одним куском в конце).
 
 ### T6.4 CI · P0 · зависит от: T6.3
-- [ ] Workflow `13-deploy-demo.md` §5 полностью, включая сверку OpenAPI и `schema.d.ts`, сборку Docker на `main` и `gitleaks`.
+- [x] Workflow `13-deploy-demo.md` §5 полностью, включая сверку OpenAPI и `schema.d.ts`, сборку Docker на `main` и `gitleaks`.
 
 ### T6.5 Документы сдачи · P0 · зависит от: T6.3, T6.2
 **Спека:** `13-deploy-demo.md` §7.
-- [ ] README по чеклисту, THIRD_PARTY_NOTICES (автогенерация и ручные разделы), LICENSE, скриншоты в `docs/img/`.
+- [x] README по чеклисту, THIRD_PARTY_NOTICES (автогенерация и ручные разделы), LICENSE, скриншоты в `docs/img/`.
 
 ### T6.6 Развёртывание и тег · P0 · зависит от: T6.3, T5.5
 **Спека:** `13-deploy-demo.md` §4, §6–7.
