@@ -21,6 +21,7 @@ from alfa_insight.errors import (
 from alfa_insight.log import get_logger
 from alfa_insight.services.insights import find_current
 from alfa_insight.store.events import EventStore
+from alfa_insight.store.rankings import RankingStore
 from alfa_insight.store.runs import RunRow, RunStore
 
 log = get_logger("services.jobs")
@@ -197,3 +198,65 @@ class JobRunner:
     async def wait_all(self) -> None:
         if self._tasks:
             await asyncio.gather(*list(self._tasks), return_exceptions=True)
+
+
+# ── прекомпьют (§1.3) ──
+def precompute_companies(app: AppContext, spec: str | None = None) -> list[str]:
+    """`demo` — из config/demo.yaml; `all` — все целевые (демо первыми); иначе список через запятую."""
+    value = (spec or app.settings.precompute_companies).strip()
+    demo = app.demo.ids()
+    if value == "demo":
+        return demo
+    if value == "all":
+        rest = [c for c in app.profiles.company_ids() if c not in demo]
+        return [*demo, *rest]
+    return [c.strip() for c in value.split(",") if c.strip()]
+
+
+def enqueue_precompute(
+    app: AppContext,
+    *,
+    companies: list[str] | None = None,
+    top_k: int | None = None,
+    min_score: float | None = None,
+) -> int:
+    """Поставить в очередь прогоны insight/pipeline/precompute для top-K событий роли по умолчанию."""
+    cfg = app.demo.precompute
+    k = cfg.top_k if top_k is None else top_k
+    threshold = cfg.min_score if min_score is None else min_score
+    roles = {c.company_id: c.default_role for c in app.demo.companies}
+    demo = set(app.demo.ids())
+    runs, events, ranks = RunStore(app.db), EventStore(app.db), RankingStore(app.db)
+    planned: list[tuple[int, float, str, str, int]] = []
+    for company_id in companies or precompute_companies(app):
+        if not app.profiles.exists(company_id):
+            log.warning("precompute_unknown_company", company_id=company_id)
+            continue
+        role = roles.get(company_id, "cfo")
+        picked = 0
+        for row in ranks.top(company_id, role, min_score=threshold, limit=k * 4):
+            if picked >= k:
+                break
+            ev = events.get(row["event_id"])
+            if ev is None or ev.injection_suspected or ev.visibility != "public":
+                continue
+            picked += 1
+            if (
+                find_current(app, company_id, ev.id) is not None
+                or runs.active_for(company_id, ev.id) is not None
+            ):
+                continue
+            planned.append((0 if company_id in demo else 1, -row["score"], company_id, role, ev.id))
+    planned.sort()
+    for _demo, _score, cid, run_role, event_id in planned:
+        runs.create(
+            kind="insight",
+            mode="pipeline",
+            company_id=cid,
+            role=run_role,
+            event_id=event_id,
+            priority="precompute",
+        )
+    if planned:
+        log.info("precompute_enqueued", runs=len(planned))
+    return len(planned)

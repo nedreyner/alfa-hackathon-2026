@@ -87,14 +87,37 @@ def init_cmd() -> None:
 
 @app.command("worker")
 def worker_cmd() -> None:
-    """Фоновый планировщик: сбор, конвейер, прекомпьют."""
-    _not_implemented("worker")
+    """Фоновый планировщик: сбор, конвейер, ранжирование, прекомпьют, макро."""
+    import asyncio
+
+    from alfa_insight.worker.main import run_worker
+
+    asyncio.run(run_worker())
 
 
 @app.command("precompute")
-def precompute_cmd() -> None:
-    """Предрасчёт инсайтов для демо-компаний."""
-    _not_implemented("precompute")
+def precompute_cmd(
+    companies: str = typer.Option("demo", "--companies", help="demo | all | список company_id через запятую"),
+    top_k: int | None = typer.Option(None, "--top-k", help="Событий на компанию (по умолчанию из demo.yaml)"),
+    min_score: float | None = typer.Option(None, "--min-score"),
+    limit: int = typer.Option(50, "--limit", help="Максимум прогонов за запуск"),
+) -> None:
+    """Предрасчёт инсайтов (режим pipeline) для top-K событий компаний."""
+    import asyncio
+
+    from alfa_insight.appctx import build_context
+    from alfa_insight.services.jobs import JobRunner, enqueue_precompute, precompute_companies
+    from alfa_insight.store.runs import RunStore
+
+    ctx = build_context()
+    runner = JobRunner(ctx)
+    runner.recover_stale()
+    ids = precompute_companies(ctx, companies)
+    queued = enqueue_precompute(ctx, companies=ids, top_k=top_k, min_score=min_score)
+    typer.echo(f"Компаний: {len(ids)}, поставлено в очередь: {queued}")
+    done = asyncio.run(runner.process_queue(limit=limit))
+    stats = RunStore(ctx.db).count_by_status()
+    typer.echo(f"Выполнено прогонов: {done}; статусы: {stats}")
 
 
 @app.command("version")

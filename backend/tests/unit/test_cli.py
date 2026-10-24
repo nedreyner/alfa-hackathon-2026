@@ -25,5 +25,5 @@ def test_help_lists_all_groups() -> None:
 
 
 def test_stub_returns_exit_code_2() -> None:
-    result = runner.invoke(app, ["worker"])
+    result = runner.invoke(app, ["init"])  # ещё не реализована (T6.x)
     assert result.exit_code == 2
