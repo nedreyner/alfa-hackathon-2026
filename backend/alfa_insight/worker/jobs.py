@@ -82,6 +82,20 @@ class WorkerJobs:
         self._count("rank")
         return await asyncio.to_thread(self.app.ranking.rank_all)
 
+    @safe_job("rerank")
+    async def rerank(self) -> int:
+        """LLM-переранжирование топа компаний прекомпьюта (07-ranking.md §10); выключено флагом конфига."""
+        self._count("rerank")
+        if not self.app.ranking_config.rerank.enabled:
+            return 0
+        from alfa_insight.ranking.rerank import rerank_company
+        from alfa_insight.services.jobs import precompute_companies
+
+        n = 0
+        for company_id in precompute_companies(self.app):
+            n += await rerank_company(self.app, company_id)
+        return n
+
     @safe_job("precompute")
     async def precompute(self) -> int:
         self._count("precompute")

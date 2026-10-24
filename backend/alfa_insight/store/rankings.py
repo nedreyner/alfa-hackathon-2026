@@ -23,14 +23,14 @@ class RankingStore:
             self.db.executemany(
                 "INSERT INTO rankings(company_id, event_id, role, score, relevance, rerank_score, direction, impact_level, "
                 "chain_preview, components_json, chain_json, profile_version, computed_at) "
-                "VALUES (:company_id, :event_id, :role, :score, :relevance, NULL, :direction, :impact_level, "
+                "VALUES (:company_id, :event_id, :role, :score, :relevance, :rerank_score, :direction, :impact_level, "
                 ":chain_preview, :components_json, :chain_json, :profile_version, :computed_at) "
                 "ON CONFLICT(company_id, event_id, role) DO UPDATE SET score = excluded.score, "
-                "relevance = excluded.relevance, direction = excluded.direction, impact_level = excluded.impact_level, "
+                "relevance = excluded.relevance, rerank_score = excluded.rerank_score, direction = excluded.direction, impact_level = excluded.impact_level, "
                 "chain_preview = excluded.chain_preview, components_json = excluded.components_json, "
                 "chain_json = excluded.chain_json, profile_version = excluded.profile_version, "
                 "computed_at = excluded.computed_at",
-                [{**r, "computed_at": now} for r in rows],
+                [{"rerank_score": None, **r, "computed_at": now} for r in rows],
             )
 
     def delete_company(self, company_id: str, keep_event_ids: set[int] | None = None) -> None:

@@ -43,6 +43,8 @@ def build_scheduler(
     if daily:
         sched.add_job(jobs.macro_refresh, CronTrigger(hour=8, minute=35, timezone=MSK), id="macro_refresh")
         sched.add_job(jobs.housekeeping, CronTrigger(hour=3, minute=10, timezone=MSK), id="housekeeping")
+        if app.ranking_config.rerank.enabled:
+            sched.add_job(jobs.rerank, CronTrigger(hour=6, minute=20, timezone=MSK), id="rerank")
     return sched, jobs
 
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from alfa_insight.appctx import build_context
 from alfa_insight.services.jobs import JobRunner, enqueue_precompute, precompute_companies
 from alfa_insight.settings import Settings
@@ -87,3 +89,38 @@ def test_precompute_selection(seeded_ctx) -> None:  # type: ignore[no-untyped-de
         for r in runs.list_for_company(c, "insight")
     ]
     assert len(pairs) == len(set(pairs))
+
+
+def test_rerank_applies_and_survives_rerank_all(seeded_ctx) -> None:  # type: ignore[no-untyped-def]
+    from alfa_insight.ranking.rerank import judgments, kv_key, multiplier, rerank_company
+    from alfa_insight.store.events import EventStore
+
+    app = seeded_ctx
+    app.ranking_config.rerank.enabled = True
+    app.ranking.rank_company("SYN-DEMO-02")
+    ranks = RankingStore(app.db)
+    top = ranks.top("SYN-DEMO-02", "cfo", limit=3)
+    victim = top[0]["event_id"]
+    ev = EventStore(app.db).get(victim)
+    app.db.execute("UPDATE events SET title = ? WHERE id = ?", (f"{ev.title} [[IRRELEVANT]]", victim))  # type: ignore[union-attr]
+    before = {r["event_id"]: r["score"] for r in top}
+
+    assert asyncio.run(rerank_company(app, "SYN-DEMO-02")) > 0
+    profile = app.profiles.get("SYN-DEMO-02")
+    got = judgments(app.kv, "SYN-DEMO-02", profile.profile_version)
+    assert got[victim] == 0 and got[top[1]["event_id"]] == 2
+    alpha = app.ranking_config.rerank.alpha
+    row = ranks.get("SYN-DEMO-02", victim, "cfo")
+    assert (
+        row["score"] == pytest.approx(before[victim] * multiplier(0, alpha), rel=1e-3)
+        and row["rerank_score"] == 0
+    )
+    app.ranking.rank_all()  # пересчёт не теряет оценки
+    assert ranks.get("SYN-DEMO-02", victim, "cfo")["score"] == pytest.approx(
+        before[victim] * multiplier(0, alpha), rel=1e-3
+    )
+    # выключенный флаг — скор без поправки
+    app.ranking_config.rerank.enabled = False
+    app.ranking.rank_company("SYN-DEMO-02")
+    assert ranks.get("SYN-DEMO-02", victim, "cfo")["score"] == pytest.approx(before[victim], rel=1e-3)
+    assert app.kv.get(kv_key("SYN-DEMO-02"))["profile_version"] == profile.profile_version

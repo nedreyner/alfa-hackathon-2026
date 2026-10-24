@@ -50,10 +50,17 @@ class RankingService:
         return self.events.load_signals(self.events.list_ids(visibility="public", since=since))
 
     def _rank(self, events: list[EventSignal], profiles: list[CompanyProfile], now: datetime) -> int:
+        from alfa_insight.ranking.rerank import judgments, multiplier
+        from alfa_insight.store.kv import KVStore
+
         rows = []
         drop = []
+        kv = KVStore(self.db)
         for profile in profiles:
             shares = {side: blended_shares(profile, self.tax, side) for side in ("supply", "demand")}  # type: ignore[arg-type]
+            rer = (
+                judgments(kv, profile.company_id, profile.profile_version) if self.cfg.rerank.enabled else {}
+            )
             for event in events:
                 if event.visibility == "private" and event.owner_company_id != profile.company_id:
                     continue
@@ -63,12 +70,17 @@ class RankingService:
                     if weak and event.visibility != "private":  # приватное событие фичи B храним всегда
                         drop.append((profile.company_id, event.event_id, role))
                         continue
+                    rel = rer.get(event.event_id)
+                    score = (
+                        res.score * multiplier(rel, self.cfg.rerank.alpha) if rel is not None else res.score
+                    )
                     rows.append(
                         {
                             "company_id": profile.company_id,
                             "event_id": event.event_id,
                             "role": role,
-                            "score": res.score,
+                            "score": score,
+                            "rerank_score": rel / 3 if rel is not None else None,
                             "relevance": res.exposure.relevance,
                             "direction": res.direction,
                             "impact_level": res.impact_level,
