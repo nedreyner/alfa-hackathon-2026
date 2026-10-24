@@ -7,7 +7,14 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from alfa_insight.api.deps import current_session, get_ctx, get_runner, require_admin
+from alfa_insight.api.deps import (
+    Reviewer,
+    current_session,
+    get_ctx,
+    get_runner,
+    require_admin,
+    require_reviewer,
+)
 from alfa_insight.api.schemas import MacroResponse, PrecomputeIn, ReviewIn, ReviewItem, SourceStatus
 from alfa_insight.api.session import SessionData
 from alfa_insight.appctx import AppContext
@@ -22,6 +29,8 @@ from alfa_insight.worker.jobs import WorkerJobs
 
 router = APIRouter(tags=["macro"])
 admin = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+# Очередь проверки: админ или жюри (своя компания) — отдельный роутер с тем же префиксом
+review = APIRouter(prefix="/admin", tags=["admin"])
 FX = ("fx_usd", "fx_eur", "fx_cny", "fx_try", "fx_aed", "fx_inr", "fx_kzt")
 
 
@@ -82,14 +91,26 @@ async def admin_precompute(
     return {"queued": queued}
 
 
-@admin.get("/review-queue", response_model=list[ReviewItem])
-async def review_queue(ctx: AppContext = Depends(get_ctx)) -> list[ReviewItem]:
-    return [_review_item(r) for r in QualityStore(ctx.db).review_queue()]
+@review.get("/review-queue", response_model=list[ReviewItem])
+async def review_queue(
+    ctx: AppContext = Depends(get_ctx), who: Reviewer = Depends(require_reviewer)
+) -> list[ReviewItem]:
+    rows = QualityStore(ctx.db).review_queue()
+    return [_review_item(r) for r in rows if who.company_id in (None, r["company_id"])]
 
 
-@admin.post("/insights/{insight_id}/review", response_model=ReviewItem)
-async def review_insight(insight_id: str, body: ReviewIn, ctx: AppContext = Depends(get_ctx)) -> ReviewItem:
-    row = InsightStore(ctx.db).review(insight_id, body.status, body.note)
+@review.post("/insights/{insight_id}/review", response_model=ReviewItem)
+async def review_insight(
+    insight_id: str,
+    body: ReviewIn,
+    ctx: AppContext = Depends(get_ctx),
+    who: Reviewer = Depends(require_reviewer),
+) -> ReviewItem:
+    store = InsightStore(ctx.db)
+    current = store.get(insight_id)
+    if current is None or who.company_id not in (None, current.company_id):
+        raise NotFoundError("Инсайт не найден", {"insight_id": insight_id})
+    row = store.review(insight_id, body.status, body.note)
     if row is None:
         raise NotFoundError("Инсайт не найден", {"insight_id": insight_id})
     return ReviewItem(

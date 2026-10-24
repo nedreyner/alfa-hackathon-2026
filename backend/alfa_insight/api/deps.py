@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import hmac
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 
 from fastapi import Depends, Request
 
 from alfa_insight.api.ratelimit import RateLimiter
 from alfa_insight.api.session import COOKIE, SessionData, load
 from alfa_insight.appctx import AppContext
-from alfa_insight.errors import NotFoundError
+from alfa_insight.errors import AppError, NotFoundError
 from alfa_insight.services.jobs import JobRunner
 
 
@@ -57,3 +58,25 @@ def require_admin(request: Request, ctx: AppContext = Depends(get_ctx)) -> None:
     given = request.headers.get("x-admin-token", "")
     if not token or not hmac.compare_digest(token, given):
         raise NotFoundError("Не найдено")
+
+
+@dataclass
+class Reviewer:
+    """Кто разбирает очередь проверки: админ (все компании) или жюри (только компания своей сессии)."""
+
+    company_id: str | None
+
+
+def require_reviewer(request: Request, ctx: AppContext = Depends(get_ctx)) -> Reviewer:
+    """Очередь экспертной проверки: X-Admin-Token или сессия жюри; иначе 404, как у админки (14-backlog T5.6)."""
+    token = ctx.settings.admin_token.get_secret_value()
+    given = request.headers.get("x-admin-token", "")
+    if token and given and hmac.compare_digest(token, given):
+        return Reviewer(company_id=None)
+    try:
+        s = load(ctx.settings, request.cookies.get(COOKIE))
+    except AppError:
+        s = None
+    if s is not None and s.jury:
+        return Reviewer(company_id=s.company_id)
+    raise NotFoundError("Не найдено")

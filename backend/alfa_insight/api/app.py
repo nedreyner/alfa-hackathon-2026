@@ -34,7 +34,7 @@ log = get_logger("api.app")
 ROUTERS = [
     system.router, companies.router, session.router, reference.router, profile.router, feed.router,
     insights.router, sources.router, telemetry.router, runs.router,
-    admin.router, admin.admin,
+    admin.router, admin.admin, admin.review,
 ]  # fmt: skip
 
 

@@ -1357,6 +1357,31 @@
         }
       }
     },
+    "/api/admin/sources/status": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Sources Status",
+        "operationId": "sources_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/SourceStatus"
+                  },
+                  "type": "object",
+                  "title": "Response Sources Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/review-queue": {
       "get": {
         "tags": [
@@ -1427,31 +1452,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/sources/status": {
-      "get": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Sources Status",
-        "operationId": "sources_status",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "$ref": "#/components/schemas/SourceStatus"
-                  },
-                  "type": "object",
-                  "title": "Response Sources Status"
                 }
               }
             }

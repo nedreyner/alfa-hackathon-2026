@@ -119,3 +119,13 @@ a {
     transition: none !important;
   }
 }
+
+.link-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ai-text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}

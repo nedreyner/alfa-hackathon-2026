@@ -1,10 +1,11 @@
 import { lazy, Suspense } from 'react';
 
-import { useQuality } from '../api/hooks';
+import { useQuality, useSession } from '../api/hooks';
 import { ErrorState } from '../components/common/ErrorState';
 import { SkeletonCard } from '../components/common/SkeletonCard';
 import { Section } from '../components/insight/Sections';
 import { OfflineReport } from '../components/quality/OfflineReport';
+import { ReviewQueue } from '../components/quality/ReviewQueue';
 import { formatCost, formatDuration, formatShare } from '../lib/format';
 import { BUDGET_MODE, ERROR_TEXT } from '../lib/labels';
 
@@ -27,6 +28,7 @@ const grid = {
 
 export default function QualityPage() {
   const q = useQuality();
+  const session = useSession();
   if (q.isPending)
     return (
       <div className="page">
@@ -153,6 +155,8 @@ export default function QualityPage() {
           В очереди экспертной проверки: {q.data.review_queue_size}
         </p>
       </Section>
+
+      <ReviewQueue jury={!!session.data?.jury} companyId={session.data?.company.company_id} />
     </div>
   );
 }

@@ -63,8 +63,8 @@ class SessionData(BaseModel):          # содержимое cookie (подпи
 | POST | `/api/admin/ingest/run` | Сбор + тик конвейера сейчас | `{started: true}` |
 | POST | `/api/admin/rank/run` | Пересчитать ранжирование | `{rows: int}` |
 | POST | `/api/admin/precompute/run` | Прекомпьют (`{companies?, top_k?}`) | `{queued: int}` |
-| GET | `/api/admin/review-queue` | Инсайты `needs_review` | `list[ReviewItem]` |
-| POST | `/api/admin/insights/{insight_id}/review` | `{status: published\|rejected, note?}` | `ReviewItem` |
+| GET | `/api/admin/review-queue` | Инсайты `needs_review` и выпущенные с низкой уверенностью. Доступ — `X-Admin-Token` (все компании) или сессия жюри (только её компания), иначе 404 | `list[ReviewItem]` |
+| POST | `/api/admin/insights/{insight_id}/review` | `{status: published\|rejected, note?}`; доступ — как у очереди (жюри — только инсайты своей компании) | `ReviewItem` |
 | GET | `/api/admin/sources/status` | Состояние RSS-источников | `dict[str, SourceStatus]` |
 
 ## 4. Модели запросов и ответов (`api/schemas.py`)

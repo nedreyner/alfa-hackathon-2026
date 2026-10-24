@@ -35,6 +35,7 @@ export type MacroResponse = S['MacroResponse'];
 export type QualityResponse = S['QualityResponse'];
 export type OfflineSummary = S['OfflineSummary'];
 export type WhatIfOut = S['WhatIfOut'];
+export type ReviewItem = S['ReviewItem'];
 export type ProductOffer = S['ProductOffer'];
 export type FeedbackIn = S['FeedbackIn'];
 

@@ -72,3 +72,22 @@ def test_admin_requires_token_and_review(env) -> None:  # type: ignore[no-untype
     status = c.get("/api/admin/sources/status", headers=h).json()
     assert status and all(isinstance(v, dict) for v in status.values())
     assert c.post("/api/admin/ingest/run", headers=h).json() == {"started": True}
+
+
+def test_jury_reviews_own_company_only(env) -> None:  # type: ignore[no-untyped-def]
+    c, insight_id = env
+    app = c.app.state.ctx  # type: ignore[attr-defined]
+    app.settings.jury_code = type(app.settings.jury_code)("jury-42")
+    # обычная сессия — очереди не видно, админские действия жюри недоступны
+    assert c.get("/api/admin/review-queue").status_code == 404
+    login = {"company_id": COMPANY, "role": "cfo", "jury_code": "jury-42"}
+    assert c.post("/api/session", json=login).json()["jury"] is True
+    assert [i["insight_id"] for i in c.get("/api/admin/review-queue").json()] == [insight_id]
+    assert c.post("/api/admin/rank/run").status_code == 404
+    # жюри другой компании не видит и не меняет чужой инсайт
+    assert c.post("/api/session", json={**login, "company_id": "SYN-DEMO-01"}).status_code == 200
+    assert c.get("/api/admin/review-queue").json() == []
+    assert c.post(f"/api/admin/insights/{insight_id}/review", json={"status": "published"}).status_code == 404
+    assert c.post("/api/session", json=login).status_code == 200
+    r = c.post(f"/api/admin/insights/{insight_id}/review", json={"status": "published", "note": "ок"})
+    assert r.status_code == 200 and r.json()["status"] == "published"

@@ -514,6 +514,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/admin/sources/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Sources Status */
+    get: operations['sources_status'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/admin/review-queue': {
     parameters: {
       query?: never;
@@ -542,23 +559,6 @@ export interface paths {
     put?: never;
     /** Review Insight */
     post: operations['review_insight'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/admin/sources/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Sources Status */
-    get: operations['sources_status'];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2931,6 +2931,28 @@ export interface operations {
       };
     };
   };
+  sources_status: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: components['schemas']['SourceStatus'];
+          };
+        };
+      };
+    };
+  };
   review_queue: {
     parameters: {
       query?: never;
@@ -2982,28 +3004,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  sources_status: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: components['schemas']['SourceStatus'];
-          };
         };
       };
     };

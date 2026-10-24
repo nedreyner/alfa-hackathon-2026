@@ -271,3 +271,56 @@ export function useWhatIf(
       ),
   });
 }
+
+/** Очередь экспертной проверки: жюри видит свою компанию, админ с токеном — все (T5.6). */
+const ADMIN_TOKEN_KEY = 'ai_admin_token';
+
+export function adminToken(): string | null {
+  try {
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAdminToken(token: string | null) {
+  try {
+    if (token) sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    else sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  } catch {
+    /* хранилище недоступно — токен живёт до перезагрузки страницы */
+  }
+}
+
+function reviewHeaders(): Record<string, string> {
+  const token = adminToken();
+  return token ? { 'X-Admin-Token': token } : {};
+}
+
+export function useReviewQueue(enabled: boolean, tokenVersion: number) {
+  return useQuery({
+    queryKey: ['review-queue', tokenVersion],
+    enabled,
+    retry: false,
+    queryFn: async () => unwrap(await api.GET('/api/admin/review-queue', { headers: reviewHeaders() })),
+  });
+}
+
+export function useReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { insightId: string; status: 'published' | 'rejected'; note?: string }) =>
+      unwrap(
+        await api.POST('/api/admin/insights/{insight_id}/review', {
+          params: { path: { insight_id: v.insightId } },
+          body: { status: v.status, note: v.note ?? null },
+          headers: reviewHeaders(),
+        }),
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['review-queue'] });
+      void qc.invalidateQueries({ queryKey: ['quality'] });
+      void qc.invalidateQueries({ queryKey: ['feed'] });
+    },
+  });
+}
