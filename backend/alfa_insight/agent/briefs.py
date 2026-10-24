@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from alfa_insight.agent.schemas import Action, Insight, ProductOffer
 from alfa_insight.appctx import AppContext
-from alfa_insight.ranking.diversity import diversify, diversify_rows, main_path_key
+from alfa_insight.ranking.diversity import diversify, main_path_key
 from alfa_insight.ranking.models import Direction, ImpactLevel, Role
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
@@ -62,6 +62,26 @@ def _words(item: BriefItem) -> int:
     return sum(len(p.split()) for p in parts)
 
 
+ROLE_FOCUS_BONUS = 1.5
+FOCUS_MIN_MULTIPLIER = 1.15
+
+
+def role_focus(app: AppContext, role: Role) -> set[str]:
+    """Главные пути, которые роль видит в первую очередь: каналы и факторы с множителем роли > 1.15.
+
+    Скоры насыщаются (у компании с кредитом экспозиция к ставке 1.0), и множители ранжирования порядок
+    почти не меняют; поэтому брифинг дополнительно поднимает темы роли (07-ranking.md §7).
+    """
+    cfg = app.ranking_config.roles[role]
+    keys = {f"{ch}:*" for ch, w in cfg.channels.items() if ch != "factor" and w >= FOCUS_MIN_MULTIPLIER}
+    keys |= {f"factor:{f}" for f, w in cfg.factors.items() if w >= FOCUS_MIN_MULTIPLIER}
+    return keys
+
+
+def in_focus(key: str, focus: set[str]) -> bool:
+    return key in focus or f"{key.split(':', 1)[0]}:*" in focus
+
+
 def distinct_themes[T](items: list[T], tags: Callable[[T], set[str]], n: int) -> list[T]:
     """Первые n по порядку, но без повторов темы (тип события или главный путь влияния); не хватило — добор.
 
@@ -81,7 +101,16 @@ def distinct_themes[T](items: list[T], tags: Callable[[T], set[str]], n: int) ->
 
 
 def build_brief(app: AppContext, company_id: str, role: Role) -> Brief:
-    rows = diversify_rows(RankingStore(app.db).top(company_id, role, limit=CANDIDATES * 5))[:CANDIDATES]
+    focus = role_focus(app, role)
+
+    def bonus(key: str) -> float:
+        return ROLE_FOCUS_BONUS if in_focus(key, focus) else 1.0
+
+    rows = diversify(
+        RankingStore(app.db).top(company_id, role, limit=CANDIDATES * 5),
+        score=lambda r: float(r["score"]) * bonus(main_path_key(r)),
+        key=main_path_key,
+    )[:CANDIDATES]
     insights = InsightStore(app.db).latest_by_events(
         company_id, [r["event_id"] for r in rows], statuses=("published",)
     )
@@ -112,7 +141,7 @@ def build_brief(app: AppContext, company_id: str, role: Role) -> Brief:
     keys = {r["event_id"]: main_path_key(r) for r in rows}
     ordered = diversify(
         items,
-        score=lambda i: i.score * READY_BOOST if i.status == "ready" else i.score,
+        score=lambda i: (i.score * READY_BOOST if i.status == "ready" else i.score) * bonus(keys[i.event_id]),
         key=lambda i: keys[i.event_id],
     )
     themes = {r["event_id"]: (ev.event_type if (ev := events.get(r["event_id"])) else "") for r in rows}

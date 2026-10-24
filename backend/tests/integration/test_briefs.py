@@ -77,3 +77,12 @@ def test_distinct_themes() -> None:
         "duty": {"type:tariff"},
     }
     assert distinct_themes(["rate", "cpi", "duty"], lambda s: tags[s], 2) == ["rate", "duty"]
+
+
+def test_role_focus(seeded_ctx) -> None:  # type: ignore[no-untyped-def]
+    from alfa_insight.agent.briefs import in_focus, role_focus
+
+    t, o, c = (role_focus(seeded_ctx, r) for r in ("treasurer", "owner", "cfo"))
+    assert {"factor:key_rate", "factor:fx_cny"} <= t and "own:*" in o and "supply:*" in c
+    assert in_focus("supply:metallurgy", c) and not in_focus("supply:metallurgy", t)
+    assert not in_focus("factor:key_rate", c)  # множитель 1.1 — не фокус финдиректора
