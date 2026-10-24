@@ -48,13 +48,13 @@ tasks:
   agent:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: interactive, strategy: tool_call, timeout_s: 45}
   draft:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: precompute,  strategy: auto,      timeout_s: 45}
   revise:              {chain: [deepseek, kimi],      temperature: 0.1, max_tokens: 4000, priority: precompute,  strategy: auto,      timeout_s: 45}
-  verify:              {chain: [glm, qwen_text],      temperature: 0,   max_tokens: 2000, priority: precompute,  strategy: auto,      timeout_s: 40,
+  verify:              {chain: [glm, qwen_text],      temperature: 0,   max_tokens: 2000, priority: precompute,  strategy: auto,      timeout_s: 40, hedge_after_s: 6.0,
                         exclude_drafter_family: true}
   eval_label:          {chain: [kimi, deepseek],      temperature: 0,   max_tokens: 3000, priority: background,  strategy: auto,      timeout_s: 90}   # офлайн-оценка, 12-quality.md §2.3
   chat:                {chain: [kimi, deepseek],      temperature: 0.3, max_tokens: 1500, priority: interactive, strategy: tool_call, timeout_s: 30}
 ```
 
-- `hedge_after_s` в задаче (только структурированный вывод): если первая модель цепочки не ответила за это время, параллельно запускается вторая; берётся первый валидный ответ, второй запрос отменяется. Включено для `tagging_interactive` (4,5 с): скорость Gemma на шлюзе колеблется от 5 до 12 с, а разметка стоит на критическом пути фичи B. Лишний расход — не больше одного вызова разметки за прогон. В режимах `fake` и `replay` хедж не используется.
+- `hedge_after_s` в задаче (только структурированный вывод): если первая модель цепочки не ответила за это время, параллельно запускается вторая; берётся первый валидный ответ, второй запрос отменяется. Включено для `tagging_interactive` (4,5 с): скорость Gemma на шлюзе колеблется от 5 до 12 с, а разметка стоит на критическом пути фичи B; и для `verify` (6 с): судья GLM отвечает за 5–9 с, вторая модель цепочки (Qwen) — тоже другого семейства, чем черновик. Лишний расход — не больше одного вызова разметки за прогон. В режимах `fake` и `replay` хедж не используется.
 - `reasoning: false` в задаче отключает рассуждения модели: шлюз принимает `extra_body: {"reasoning": {"enabled": false}}`. Без этого qwen, deepseek, glm и kimi тратят до 200 токенов «на размышления» даже на ответ «ок» и при малом `max_tokens` возвращают пустой `content`. С отключением ответ дешевле в 10–30 раз и заметно быстрее. Значение входит в ключ кеша.
 - Чат идёт на `[deepseek, kimi]`, а не `[kimi, deepseek]`: по замеренным ценам (§2.2) kimi дороже deepseek в 4–6 раз.
 - `priority` в задаче — значение по умолчанию. Вызывающий код может его поднять: например, `draft` внутри интерактивного прогона идёт с `interactive`.

@@ -38,7 +38,7 @@ tasks:
   draft:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: precompute,  strategy: auto,        timeout_s: 45, reasoning: false}
   revise:              {chain: [deepseek, kimi],      temperature: 0.1, max_tokens: 4000, priority: precompute,  strategy: auto,        timeout_s: 45, reasoning: false}
   verify:              {chain: [glm, qwen_text],      temperature: 0,   max_tokens: 2000, priority: precompute,  strategy: auto,        timeout_s: 40, reasoning: false,
-                        exclude_drafter_family: true}
+                        exclude_drafter_family: true, hedge_after_s: 6.0}
   # Офлайн-оценка (12-quality.md §2.3): предразметка сильнейшей моделью другого семейства, чем разметка новостей
   eval_label:          {chain: [kimi, deepseek],      temperature: 0,   max_tokens: 3000, priority: background,  strategy: auto,        timeout_s: 90, reasoning: false}
   chat:                {chain: [deepseek, kimi],      temperature: 0.3, max_tokens: 1500, priority: interactive, strategy: tool_call,   timeout_s: 30, reasoning: false,
