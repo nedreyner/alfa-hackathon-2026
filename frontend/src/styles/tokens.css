@@ -1,0 +1,24 @@
+:root {
+  --ai-accent: var(--color-light-accent-primary, #ef3124);
+  --ai-text: var(--color-light-text-primary, #0e0e10);
+  --ai-text-secondary: var(--color-light-text-secondary, #86868a);
+  --ai-bg: var(--color-light-bg-primary, #ffffff);
+  --ai-bg-subtle: var(--color-light-bg-secondary, #f3f4f5);
+  --ai-border: #e7e8eb;
+  --ai-risk: #d4200c;
+  --ai-risk-bg: #fdedeb;
+  --ai-opportunity: #0b8f43;
+  --ai-opportunity-bg: #e8f6ee;
+  --ai-mixed: #6e6e73;
+  --ai-mixed-bg: #f1f1f3;
+  --ai-bank-bg: #fdecea;
+  --ai-warn: #c98a00;
+  --ai-radius-lg: 24px;
+  --ai-radius-md: 16px;
+  --ai-radius-sm: 10px;
+  --ai-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --ai-font:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ai-content-width: 760px;
+  --ai-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
