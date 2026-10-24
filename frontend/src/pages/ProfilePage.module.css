@@ -1,0 +1,89 @@
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.fact {
+  padding: 14px 16px;
+  border-radius: var(--ai-radius-md);
+  background: var(--ai-bg-subtle);
+  scroll-margin-top: 90px;
+}
+
+.fact:target {
+  outline: 2px solid var(--ai-accent);
+}
+
+.origin {
+  font-size: 11px;
+  color: var(--ai-text-secondary);
+  margin-top: 6px;
+}
+
+.bar {
+  display: flex;
+  height: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px 0 8px;
+  background: var(--ai-border);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table td {
+  padding: 8px 0;
+  border-top: 1px solid var(--ai-border);
+}
+
+.scale {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--ai-border);
+  overflow: hidden;
+  width: 120px;
+}
+
+.scaleFill {
+  height: 100%;
+  background: var(--ai-text);
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.control {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ai-border);
+  font: inherit;
+  background: var(--ai-bg);
+}
