@@ -29,8 +29,10 @@ TAG_BODY_CHARS=6000
 APP_ENV=dev                        # dev | prod
 APP_TZ=Europe/Moscow
 LOG_LEVEL=INFO
-DATA_DIR=                          # пусто → <корень>/data; в Docker /app/data
-CONFIG_DIR=                        # пусто → <корень>/config; в Docker /app/config
+# Пусто → <корень>/data и <корень>/config; в Docker задаются в docker-compose.yml (/app/data, /app/config).
+# Комментарий не пишется в строке с пустым значением: docker compose прочитает его как значение.
+DATA_DIR=
+CONFIG_DIR=
 DATA_PROFILE=synthetic             # synthetic | real
 TARGET_REVENUE_RUB=15000000000
 SESSION_SECRET=change-me-32-bytes-minimum
@@ -80,11 +82,14 @@ COPY data/reference/ /app/data/reference/
 COPY data/synthetic/ /app/data/synthetic/
 COPY data/seed/ /app/data/seed/
 RUN useradd -m -u 10001 app && mkdir -p /app/data/runtime /app/data/raw && chown -R app /app/data/runtime
-USER app
+COPY --chmod=755 backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENV PATH="/app/backend/.venv/bin:$PATH" DATA_DIR=/app/data CONFIG_DIR=/app/config
 EXPOSE 8000
-CMD ["uvicorn", "alfa_insight.api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["uvicorn", "alfa_insight.api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
 ```
+
+Том `./data/runtime` на хосте создаётся docker от root, поэтому контейнер стартует от root: `docker-entrypoint.sh` отдаёт том пользователю `app` (`chown`) и запускает процесс от него через `setpriv`. `.dockerignore` не пускает в образ `.env`, `data/raw/` и `data/runtime/`.
 
 ### 3.2 `frontend/Dockerfile`
 
@@ -144,6 +149,7 @@ server {
 x-backend: &backend
   build: {context: ., dockerfile: backend/Dockerfile}
   env_file: .env
+  environment: {DATA_DIR: /app/data, CONFIG_DIR: /app/config}
   volumes:
     - ./data/runtime:/app/data/runtime
     - ./data/raw:/app/data/raw:ro
@@ -189,6 +195,8 @@ services:
 6. `research ingest`, если в `data/raw/research/` есть PDF.
 7. `macro refresh`, при ошибке — загрузка снимка `data/seed/macro.json`.
 8. `rank all`.
+
+**Что показывает `replay` из чистого клона** (проверено 24.10.2026: `cp .env.example .env`, `LLM_MODE=replay`, `docker compose up -d --build`): разметка 630 seed-новостей берётся из `llm_cache_demo.jsonl` бесплатно, ставка и курсы — из снимка, лента, цепочки влияния, профиль и брифинги работают. Готовых разборов нет: аналитика Альфа-Банка собирается только из PDF кейса в `data/raw/research/`, а их и выдержки из них публиковать нельзя, поэтому кеш черновиков и инсайтов не выгружается. Попытка разбора в `replay` завершается кодом `llm_unavailable`, баннер «новые разборы недоступны» предупреждает об этом заранее. Полное демо — `LLM_MODE=live` с ключом шлюза.
 
 ## 4. Хостинг
 
@@ -266,7 +274,7 @@ jobs:
 ### 6.1 Подготовка («заморозка», ADR-19)
 
 1. **За 1–2 дня:** `LLM_MODE=live`. Свежий seed (`alfa seed collect` несколько дней подряд), `make seed`, `alfa precompute --companies demo --top-k 5`. Вручную пройти чеклист: у каждой демо-компании ≥ 3 сильных инсайта, цепочки осмысленны, позиция банка найдена, нет `needs_review`.
-2. `alfa demo freeze`: экспорт записей `llm_cache`, использованных разметкой seed и прогонами демо-компаний, в `data/seed/llm_cache_demo.jsonl`, плюс `alfa macro snapshot`. Коммит и деплой.
+2. `alfa demo freeze`: экспорт записей `llm_cache` с разметкой seed-новостей (текущая версия промпта, `request` не выгружается — текст новостей уже в `news.jsonl`) в `data/seed/llm_cache_demo.jsonl`, плюс снимок ставки и курсов в `macro.json`. Записи прогонов демо-компаний не выгружаются: в них выдержки из PDF аналитики, которые нельзя публиковать (см. §3.5). Коммит и деплой.
 3. **В день показа:** `LLM_MODE=live`, потому что фиче B нужна живая модель. Демо-контент отдаётся из готовых инсайтов и кеша мгновенно. Заранее открыть все демо-карточки, все должны быть `ready`.
 4. **Если шлюз упал:** `LLM_MODE=replay` и перезапуск `api` и `worker`. Всё, кроме новых новостей, работает. Для фичи B — заготовленный пример из кеша.
 5. **Резерв:** ноутбук с `docker compose up` в `replay` и видео сценария (3 мин).

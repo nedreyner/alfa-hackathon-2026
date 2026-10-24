@@ -6,6 +6,7 @@ import typer
 
 from alfa_insight import __version__
 from alfa_insight.data.commands import data_app
+from alfa_insight.demo_commands import demo_app
 from alfa_insight.ingest.commands import ingest_app, pipeline_app, seed_app
 from alfa_insight.ingest.macro_commands import macro_app
 from alfa_insight.ingest.research.commands import research_app
@@ -41,7 +42,6 @@ def _stub_group(name: str, help_text: str) -> typer.Typer:
 
 GROUPS: dict[str, str] = {
     "eval": "Офлайн-оценка качества.",
-    "demo": "Демо-кураторство и заморозка кеша.",
 }
 
 for _name, _help in GROUPS.items():
@@ -90,6 +90,7 @@ app.add_typer(macro_app, name="macro")
 app.add_typer(research_app, name="research")
 app.add_typer(search_app, name="search")
 app.add_typer(rank_app, name="rank")
+app.add_typer(demo_app, name="demo")
 
 db_app = typer.Typer(help="SQLite: миграции и обслуживание.", no_args_is_help=True)
 app.add_typer(db_app, name="db")
@@ -113,8 +114,40 @@ def db_migrate() -> None:
 
 @app.command("init")
 def init_cmd() -> None:
-    """Подготовка окружения: миграции, данные, seed (используется в Docker)."""
-    _not_implemented("init")
+    """Подготовка окружения (идемпотентно, 13-deploy-demo.md §3.5): миграции, данные, seed, макро, ранжирование."""
+    from alfa_insight.data.commands import build_cmd
+    from alfa_insight.ingest.commands import ingest_seed, pipeline_run_cmd
+    from alfa_insight.ingest.macro_commands import macro_refresh
+    from alfa_insight.ingest.research.commands import research_ingest
+    from alfa_insight.llm.commands import cache_import
+    from alfa_insight.ranking.commands import rank_all
+    from alfa_insight.settings import get_settings
+
+    settings = get_settings()
+    if settings.data_profile == "real" and not any(settings.raw_dir.glob("*.csv")):
+        typer.echo(
+            f"DATA_PROFILE=real, но в {settings.raw_dir} нет CSV — поставьте DATA_PROFILE=synthetic", err=True
+        )
+        raise typer.Exit(1)
+    typer.echo("1/8 миграции")
+    db_migrate()
+    typer.echo("2/8 данные")
+    build_cmd(force=False)
+    typer.echo("3/8 кеш LLM для seed")
+    cache_import(settings.seed_dir / "llm_cache_demo.jsonl")
+    typer.echo("4/8 seed-новости")
+    ingest_seed(shift_to_now=settings.seed_shift_to_now, path=None)
+    typer.echo("5/8 разметка и кластеризация")
+    pipeline_run_cmd(until="clustered", max_cost=settings.init_max_cost_rub, no_fetch=True)
+    pdfs = list((settings.raw_dir / "research").glob("*.pdf"))
+    typer.echo(f"6/8 аналитика Альфа-Банка: PDF {len(pdfs)}")
+    if pdfs:
+        research_ingest(max_cost=settings.init_max_cost_rub, vision=False, directory=None)
+    typer.echo("7/8 ставка и курсы ЦБ")
+    macro_refresh()
+    typer.echo("8/8 ранжирование")
+    rank_all()
+    typer.echo("init: готово")
 
 
 @app.command("worker")

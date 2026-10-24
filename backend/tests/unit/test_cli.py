@@ -25,8 +25,16 @@ def test_help_lists_all_groups() -> None:
 
 
 def test_stub_returns_exit_code_2() -> None:
-    result = runner.invoke(app, ["init"])  # ещё не реализована (T6.x)
+    result = runner.invoke(app, ["eval"])  # ещё не реализована (T6.2)
     assert result.exit_code == 2
+
+
+def test_init_is_idempotent() -> None:
+    """`alfa init` во временном DATA_DIR (fake LLM): все шаги, повторный запуск тоже проходит."""
+    for _ in range(2):
+        result = runner.invoke(app, ["init"])
+        assert result.exit_code == 0, result.output
+        assert "8/8 ранжирование" in result.output and "init: готово" in result.output
 
 
 def test_default_settings_are_isolated_from_repo_data() -> None:

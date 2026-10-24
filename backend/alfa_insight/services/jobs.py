@@ -15,6 +15,7 @@ from alfa_insight.errors import (
     BudgetExceeded,
     Busy,
     LLMInvalidOutput,
+    LLMReplayMiss,
     LLMUnavailable,
     NotFoundError,
 )
@@ -48,7 +49,9 @@ def error_code(exc: BaseException) -> str:
         return "timeout"
     if isinstance(exc, BudgetExceeded):
         return "budget_exhausted"
-    if isinstance(exc, LLMUnavailable):
+    if isinstance(
+        exc, LLMUnavailable | LLMReplayMiss
+    ):  # replay: ответа нет в кеше — для клиента это недоступность
         return "llm_unavailable"
     if isinstance(exc, LLMInvalidOutput):
         return "invalid_output"

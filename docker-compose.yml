@@ -1,0 +1,39 @@
+# docs/13-deploy-demo.md §3.4: init → api + worker → web (nginx, :8080)
+x-backend: &backend
+  build: {context: ., dockerfile: backend/Dockerfile}
+  image: alfa-insight-backend
+  env_file: .env
+  environment: {DATA_DIR: /app/data, CONFIG_DIR: /app/config}
+  volumes:
+    - ./data/runtime:/app/data/runtime
+    - ./data/raw:/app/data/raw:ro
+
+services:
+  init:
+    <<: *backend
+    command: ["alfa", "init"]
+    restart: "no"
+
+  api:
+    <<: *backend
+    depends_on: {init: {condition: service_completed_successfully}}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  worker:
+    <<: *backend
+    command: ["alfa", "worker"]
+    depends_on: {init: {condition: service_completed_successfully}}
+    restart: unless-stopped
+
+  web:
+    build: {context: ., dockerfile: frontend/Dockerfile}
+    image: alfa-insight-web
+    ports: ["${WEB_PORT:-8080}:80"]
+    depends_on: {api: {condition: service_healthy}}
+    restart: unless-stopped
