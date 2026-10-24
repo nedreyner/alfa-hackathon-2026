@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from datetime import datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from alfa_insight.data.models import CompanyProfile, IndustryShare
 from alfa_insight.llm.budget import BudgetMode
 from alfa_insight.ranking.models import Role
 
@@ -79,3 +81,46 @@ class ReferenceResponse(BaseModel):
     roles: list[RoleInfoOut]
     products: list[RefItem]
     products_disclaimer: str
+
+
+# ── профиль (§4.2) ──
+OverrideFieldName = Literal["industry_id", "ved", "products", "notes"]
+
+
+class OverrideOut(BaseModel):
+    field: OverrideFieldName
+    value: Any
+    updated_at: datetime
+
+
+class ProfileResponse(BaseModel):
+    profile: CompanyProfile
+    overrides: list[OverrideOut]
+
+
+class CounterpartyOut(BaseModel):
+    name: str
+    industry_id: str
+    industry_name: str
+    share: float
+
+
+class CounterpartiesResponse(BaseModel):
+    direction: Literal["suppliers", "buyers"]
+    coverage: float
+    basis: str
+    mix: list[IndustryShare]
+    items: list[CounterpartyOut]
+
+
+class VedOverride(BaseModel):
+    country_iso2: str = Field(min_length=2, max_length=2)
+    direction: Literal["import", "export", "unknown"]
+
+
+class OverridesUpdate(BaseModel):
+    industry_id: str | None = None
+    ved: list[VedOverride] | None = Field(default=None, max_length=30)
+    products: dict[str, bool] | None = None
+    notes: str | None = Field(default=None, max_length=1000)
+    reset: list[OverrideFieldName] = Field(default_factory=list)
