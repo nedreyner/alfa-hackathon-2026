@@ -1,0 +1,2 @@
+# Генерируется openapi-typescript (npm run gen:api); CI сверяет его побайтно
+src/api/schema.d.ts
