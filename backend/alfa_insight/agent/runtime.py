@@ -8,6 +8,7 @@ from typing import Any
 from alfa_insight.agent import fakes as _fakes  # noqa: F401 — обработчики FakeLLM для draft и revise
 from alfa_insight.agent import verifier as _verifier  # noqa: F401 — обработчик FakeLLM для verify
 from alfa_insight.agent.agentic_mode import run_agentic
+from alfa_insight.agent.chat import run_chat
 from alfa_insight.agent.context import AgentContext
 from alfa_insight.agent.intake import AnalyzeInput, intake
 from alfa_insight.agent.pipeline_mode import run_pipeline
@@ -20,6 +21,7 @@ async def run_agent(
     *,
     analyze: AnalyzeInput | None = None,
     fetch_options: dict[str, Any] | None = None,
+    chat: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Выполнить прогон и вернуть результат для `agent_runs.result_json`. Ошибки пробрасываются (их пишет jobs)."""
     runs = RunStore(ctx.app.db)
@@ -36,16 +38,22 @@ async def run_agent(
     started = time.monotonic()
     try:
         first_phase = "intake" if ctx.kind == "analyze" else "plan"
-        title = "Проверяю новость" if ctx.kind == "analyze" else "Начинаю разбор события"
+        title = {"analyze": "Проверяю новость", "chat": "Читаю вопрос"}.get(
+            ctx.kind, "Начинаю разбор события"
+        )
         ctx.trace.emit("run.started", first_phase, title,
                        payload={"kind": ctx.kind, "mode": ctx.mode, "event_id": ctx.event_id})  # fmt: skip
+        if ctx.kind == "chat":
+            if chat is None:
+                raise ValueError("для chat нужны insight_id, thread_id и user_message_id")
+            result = await run_chat(ctx, **chat)
+            runs.succeed(ctx.run_id, result=result)
+            return result
         weak_note = None
         if ctx.kind == "analyze":
             if analyze is None:
                 raise ValueError("для analyze нужен вход AnalyzeInput")
             weak_note = (await intake(ctx, analyze, fetch_options=fetch_options)).weak_note
-        elif ctx.kind != "insight":
-            raise NotImplementedError(f"вид прогона {ctx.kind} выполняется в agent/chat.py")
         if ctx.mode == "agentic":
             insight = await run_agentic(ctx, weak_note=weak_note)
         else:

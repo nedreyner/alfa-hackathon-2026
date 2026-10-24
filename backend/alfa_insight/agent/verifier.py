@@ -106,6 +106,26 @@ def inputs_from_context(
     )
 
 
+def claim_problems(c: Claim, reg: EvidenceRegistry, allowed_domains: set[str]) -> list[str]:
+    """Проверки одного утверждения для чата (§13 п. 4): refs, источник факта, аналитика для bank, числа, URL."""
+    problems = []
+    cited = _cited(reg, c)
+    if any(reg.get(r) is None for r in c.refs):
+        problems.append("refs_exist")
+    if c.type == "fact" and not any(e.kind in FACT_SOURCE_KINDS for e in cited):
+        problems.append("fact_has_source")
+    if c.type == "bank" and not any(e.kind == "alfa" for e in cited):
+        problems.append("bank_has_alfa")
+    nums = [n for e in cited for n in e.numbers]
+    if c.type in ("fact", "bank") and any(
+        not number_supported(m.value, nums) for m in extract_numbers(c.text)
+    ):
+        problems.append("numbers_match")
+    if any(_domain(m.group(0)) not in allowed_domains for m in _URL.finditer(c.text)):
+        problems.append("no_foreign_urls")
+    return problems
+
+
 def _cited(reg: EvidenceRegistry, claim: Claim) -> list[EvidenceItem]:
     return [e for e in (reg.get(r) for r in claim.refs) if e is not None]
 

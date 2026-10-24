@@ -154,6 +154,14 @@ class Insight(InsightDraft):
     created_at: datetime
 
 
+# ── чат ──
+class ChatAnswer(BaseModel):
+    """Ответ в чате по инсайту: 1–5 утверждений и до 3 следующих вопросов."""
+
+    blocks: list[Claim] = Field(min_length=1, max_length=5)
+    followups: list[str] = Field(default_factory=list, max_length=3)
+
+
 # ── проверка ──
 class ClaimVerdict(BaseModel):
     path: str

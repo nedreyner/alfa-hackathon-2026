@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, ValidationError
 from alfa_insight.agent.context import AgentContext
 from alfa_insight.agent.evidence import EvidenceItem, EvidenceRegistry
 from alfa_insight.agent.render import CHANNEL_RU, path_text, path_weight_label, profile_brief, untrusted_wrap
-from alfa_insight.agent.schemas import InsightDraft
+from alfa_insight.agent.schemas import ChatAnswer, InsightDraft
 from alfa_insight.data.profiles import pct
 from alfa_insight.llm.structured import to_llm_schema
 from alfa_insight.llm.types import ToolCall, ToolSpec
@@ -518,7 +518,21 @@ def get_related_group(ctx: AgentContext, args: NoArgs) -> ToolResult:
 def submit_insight(ctx: AgentContext, args: InsightDraft) -> ToolResult:
     claims = len(args.claims())
     return ToolResult(
-        ok=True, summary=f"Черновик готов: {claims} утверждений", data={"draft": args.model_dump()}
+        ok=True, summary=f"Черновик готов, утверждений: {claims}", data={"value": args.model_dump()}
+    )
+
+
+@tool(
+    "submit_answer",
+    "Передать ответ клиенту (ChatAnswer). Вызывается один раз в конце.",
+    ChatAnswer,
+    "Ответ готов",
+    kinds=CHAT_KINDS,
+    terminal=True,
+)
+def submit_answer(ctx: AgentContext, args: ChatAnswer) -> ToolResult:
+    return ToolResult(
+        ok=True, summary=f"Ответ готов, блоков: {len(args.blocks)}", data={"value": args.model_dump()}
     )
 
 

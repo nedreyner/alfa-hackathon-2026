@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 
+from pydantic import BaseModel
+
 from alfa_insight.agent.context import AgentContext
 from alfa_insight.agent.evidence import KIND_LABELS
 from alfa_insight.agent.pipeline_mode import (
@@ -16,7 +18,7 @@ from alfa_insight.agent.pipeline_mode import (
 )
 from alfa_insight.agent.render import chain_block, evidence_block, profile_brief
 from alfa_insight.agent.schemas import Insight, InsightDraft, VerificationReport
-from alfa_insight.agent.tools import execute_tool_call, result_for_model, tool_specs
+from alfa_insight.agent.tools import ToolResult, execute_tool_call, result_for_model, tool_specs
 from alfa_insight.agent.verifier import inputs_from_context, verify
 from alfa_insight.errors import BudgetExceeded, LLMInvalidOutput
 from alfa_insight.llm.types import LLMRequest, LLMResult, Message, ToolCall
@@ -60,9 +62,37 @@ def _plan_from_calls(calls: list[ToolCall]) -> str:
 
 
 class AgentLoop:
-    def __init__(self, ctx: AgentContext, candidates: list[ProductCandidate], weak_note: str | None):
+    """Цикл «модель → инструменты → … → терминальный инструмент» (§7). Используется агентом и чатом."""
+
+    def __init__(
+        self,
+        ctx: AgentContext,
+        messages: list[Message],
+        version: str,
+        *,
+        task: str = "agent",
+        tools: list[str] | None = None,
+        terminal: str = "submit_insight",
+        schema: type[BaseModel] = InsightDraft,
+        nudge: str = NUDGE,
+    ):
         self.ctx = ctx
-        self.candidates = candidates
+        self.version = version
+        self.messages: list[Message] = list(messages)
+        self.task = task
+        self.terminal = terminal
+        self.schema = schema
+        self.nudge = nudge
+        self.specs = tool_specs(tools or AGENT_TOOLS)
+        self.current_event_only = False  # чат: compute_exposure только по событию инсайта
+        self.model = ""
+        self.family = ""
+        self.round = 0
+
+    @classmethod
+    def for_insight(
+        cls, ctx: AgentContext, candidates: list[ProductCandidate], weak_note: str | None
+    ) -> AgentLoop:
         role_name, role_focus = ROLE_TEXT[ctx.role]
         rendered = ctx.app.prompts.render(
             "agent",
@@ -75,27 +105,32 @@ class AgentLoop:
             max_tool_calls=ctx.limits.max_tool_calls,
             weak_note=weak_note,
         )
-        self.version = rendered.version
-        self.messages: list[Message] = list(rendered.messages)
-        self.specs = tool_specs(AGENT_TOOLS)
-        self.model = ""
-        self.family = ""
-        self.round = 0
+        return cls(ctx, rendered.messages, rendered.version)
 
     async def _call(self, *, forced: bool = False) -> LLMResult:
         ctx = self.ctx
         req = LLMRequest(
-            task="agent", messages=self.messages, prompt_version=self.version,
-            tools=[s for s in self.specs if s.name == "submit_insight"] if forced else self.specs,
-            tool_choice={"type": "function", "function": {"name": "submit_insight"}} if forced else "auto",
+            task=self.task, messages=self.messages, prompt_version=self.version,  # type: ignore[arg-type]
+            tools=[s for s in self.specs if s.name == self.terminal] if forced else self.specs,
+            tool_choice={"type": "function", "function": {"name": self.terminal}} if forced else "auto",
             priority=ctx.priority, run_id=ctx.run_id,
         )  # fmt: skip
         res = await ctx.app.router.complete(req)
         self.model, self.family = res.model_key, res.family
         return res
 
-    async def _round(self, *, forced: bool = False) -> InsightDraft | None:
-        """Один вызов модели; инструменты выполняются, черновик — если пришёл валидный submit_insight."""
+    async def _execute(self, call: ToolCall) -> ToolResult:
+        if (
+            self.current_event_only
+            and call.name == "compute_exposure"
+            and call.arguments.get("event_id") != self.ctx.event_id
+        ):
+            msg = "В чате пути влияния считаются только для события этого разбора"
+            return ToolResult(ok=False, summary=msg, error=msg)
+        return await execute_tool_call(self.ctx, call)
+
+    async def _round(self, *, forced: bool = False) -> BaseModel | None:
+        """Один вызов модели; инструменты выполняются, результат — если пришёл валидный терминальный вызов."""
         ctx = self.ctx
         self.round += 1
         res = await self._call(forced=forced)
@@ -111,24 +146,22 @@ class AgentLoop:
         if not calls:
             self.messages += [
                 Message(role="assistant", content=text or None),
-                Message(role="user", content=NUDGE),
+                Message(role="user", content=self.nudge),
             ]
             return None
         self.messages.append(Message(role="assistant", content=text or None, tool_calls=calls))
-        results = await asyncio.gather(*(execute_tool_call(ctx, c) for c in calls))
-        draft: InsightDraft | None = None
+        results = await asyncio.gather(*(self._execute(c) for c in calls))
+        draft: BaseModel | None = None
         for call, result in zip(calls, results, strict=True):
-            if call.name == "submit_insight" and result.ok and draft is None:
-                draft = InsightDraft.model_validate(result.data["draft"])
-                content = json.dumps(
-                    {"ok": True, "summary": "Черновик принят на проверку"}, ensure_ascii=False
-                )
+            if call.name == self.terminal and result.ok and draft is None:
+                draft = self.schema.model_validate(result.data["value"])
+                content = json.dumps({"ok": True, "summary": "Принято на проверку"}, ensure_ascii=False)
             else:
                 content = result_for_model(result)
             self.messages.append(Message(role="tool", tool_call_id=call.id, content=content))
         return draft
 
-    async def run_rounds(self, max_rounds: int) -> InsightDraft:
+    async def run_rounds(self, max_rounds: int) -> BaseModel:
         draft = None
         for _ in range(max_rounds):
             try:
@@ -143,10 +176,10 @@ class AgentLoop:
                 return draft
         draft = await self._round(forced=True)
         if draft is None:
-            raise LLMInvalidOutput("Модель не передала черновик", {"task": "agent"})
+            raise LLMInvalidOutput("Модель не передала результат", {"task": self.task})
         return draft
 
-    async def revise(self, report: VerificationReport) -> InsightDraft:
+    async def revise(self, report: VerificationReport) -> BaseModel:
         rev = self.ctx.app.prompts.render(
             "revise", role_name=ROLE_TEXT[self.ctx.role][0], role_focus=ROLE_TEXT[self.ctx.role][1],
             issues=report.issues, draft_json="(см. последний вызов submit_insight выше)",
@@ -163,9 +196,10 @@ async def run_agentic(ctx: AgentContext, *, weak_note: str | None = None) -> Ins
                        status="warn", payload={"text": "fallback: pipeline"})  # fmt: skip
         return await draft_and_verify(ctx, candidates, event=event)
     ctx.tool_calls = 0  # предзагрузка не входит в лимит модели
-    loop = AgentLoop(ctx, candidates, weak_note)
+    loop = AgentLoop.for_insight(ctx, candidates, weak_note)
     ctx.trace.phase("tools", "Исследую тему")
     draft = await loop.run_rounds(ctx.limits.max_tool_rounds)
+    assert isinstance(draft, InsightDraft)
     ctx.trace.emit("draft.ready", "draft", f"Черновик готов, утверждений: {len(draft.claims())}",
                    payload={"headline": draft.headline, "claims": len(draft.claims())})  # fmt: skip
 
@@ -178,7 +212,9 @@ async def run_agentic(ctx: AgentContext, *, weak_note: str | None = None) -> Ins
         ctx.trace.phase("revise", "Дорабатываю")
         ctx.trace.emit("revise.started", "revise", f"Дорабатываю: замечаний {len(report.issues)}",
                        payload={"issues": report.issues[:10]})  # fmt: skip
-        draft = await loop.revise(report)
+        revised = await loop.revise(report)
+        assert isinstance(revised, InsightDraft)
+        draft = revised
         attempts += 1
         ctx.trace.phase("verify", "Проверяю исправления")
         draft, report = await verify(ctx, draft, inp, attempt=attempts, exclude_families=exclude)

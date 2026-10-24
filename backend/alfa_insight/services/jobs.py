@@ -127,6 +127,44 @@ class JobRunner:
         self.spawn(run_id)
         return run_id
 
+    def start_chat(
+        self,
+        company_id: str,
+        role: str,
+        insight_id: str,
+        message: str,
+        *,
+        session_id: str,
+        thread_id: str | None = None,
+    ) -> tuple[str, str, int]:
+        """POST /api/insights/{id}/chat: сообщение пользователя → прогон kind=chat. (run_id, thread_id, message_id)."""
+        from alfa_insight.ids import new_id
+        from alfa_insight.store.chat import ChatStore
+        from alfa_insight.store.insights import InsightStore
+
+        row = InsightStore(self.app.db).get(insight_id)
+        if row is None or row.company_id != company_id:
+            raise NotFoundError("Инсайт не найден", {"insight_id": insight_id})
+        chat = ChatStore(self.app.db)
+        if thread_id is not None:
+            owner = chat.thread_owner(thread_id)
+            if owner is not None and (owner[0] != insight_id or owner[1] != company_id):
+                raise NotFoundError("Тред не найден", {"thread_id": thread_id})
+        if self._active >= self.app.settings.agent_max_concurrent_runs:
+            raise Busy("Сейчас идёт много разборов, попробуйте через минуту")
+        thread = thread_id or new_id("thr")
+        message_id = chat.add(
+            thread_id=thread, insight_id=insight_id, company_id=company_id, session_id=session_id,
+            role="user", content={"text": message.strip()},
+        )  # fmt: skip
+        run_id = self.runs.create(
+            kind="chat", mode="agentic", company_id=company_id, role=role, event_id=row.event_id,
+            session_id=session_id, priority="interactive",
+            input={"insight_id": insight_id, "thread_id": thread, "user_message_id": message_id},
+        )  # fmt: skip
+        self.spawn(run_id)
+        return run_id, thread, message_id
+
     def spawn(self, run_id: str) -> asyncio.Task[RunRow]:
         task = asyncio.get_running_loop().create_task(self.execute(run_id))
         self._tasks.add(task)
@@ -153,7 +191,12 @@ class JobRunner:
                 )  # fmt: skip
                 analyze = AnalyzeInput.model_validate(run.input) if run.kind == "analyze" else None
                 await asyncio.wait_for(
-                    run_agent(ctx, analyze=analyze, fetch_options=self.fetch_options),
+                    run_agent(
+                        ctx,
+                        analyze=analyze,
+                        fetch_options=self.fetch_options,
+                        chat=dict(run.input) if run.kind == "chat" else None,
+                    ),
                     timeout=self.timeout_for(run.kind),
                 )
         except Exception as exc:

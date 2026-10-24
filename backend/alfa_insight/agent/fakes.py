@@ -199,3 +199,44 @@ def fake_agent(req: LLMRequest, payload: dict[str, Any]) -> Any:
     if "[[BADSUBMIT]]" in user and not rejected:
         return FakeReply(tool_calls=[("submit_insight", {"headline": "x"})])
     return FakeReply(tool_calls=[("submit_insight", draft)])
+
+
+# ── чат: ответ из ключевых утверждений инсайта; «контрагент» в вопросе → сначала инструмент ──
+_INSIGHT_CLAIM = re.compile(r"^- \((?P<type>fact|bank|ai)\) (?P<text>.+?) \[(?P<refs>[^\]]*)\]$", re.M)
+
+
+@fake_handler("chat")
+def fake_chat(req: LLMRequest, payload: dict[str, Any]) -> Any:
+    from alfa_insight.llm.fake import FakeReply
+
+    first = _user(req)
+    last = next(
+        (m.content for m in reversed(req.messages) if m.role == "user" and isinstance(m.content, str)), ""
+    )
+    question = last.rsplit("Вопрос клиента:", 1)[-1].strip()
+    tool_msgs = [m for m in req.messages if m.role == "tool"]
+    forced = isinstance(payload.get("tool_choice"), dict)
+    if "контрагент" in question.lower() and not tool_msgs and not forced:
+        return FakeReply(content="Посмотрю ключевых поставщиков.",
+                         tool_calls=[("get_counterparties", {"direction": "suppliers", "limit": 3})])  # fmt: skip
+    blocks: list[dict[str, Any]] = []
+    tool_ev = _evidence(_tool_evidence(req))
+    if tool_ev:
+        blocks.append({"text": _sentence(tool_ev[0]["body"]), "type": "fact", "refs": [tool_ev[0]["eid"]]})
+    for m in _INSIGHT_CLAIM.finditer(first):
+        refs = [r.strip() for r in m.group("refs").split(",") if r.strip()]
+        if m.group("type") == "fact" and refs:
+            blocks.append({"text": m.group("text"), "type": "fact", "refs": refs[:2]})
+            break
+    if "[[WRONGNUM]]" in question or "[[ALLBAD]]" in question:
+        ref = blocks[0]["refs"] if blocks else ["E1"]
+        bad = {"text": "По источникам цена выросла на 99,7% за неделю.", "type": "fact", "refs": ref}
+        blocks = [bad] if "[[ALLBAD]]" in question else [*blocks, bad]
+    if not blocks:
+        blocks = [
+            {"text": "По данным разбора прямого ответа нет.", "type": "ai", "refs": [], "confidence": "low"}
+        ]
+    answer = {"blocks": blocks[:5], "followups": ["Что делать в первую очередь?"]}
+    if forced:
+        return answer
+    return FakeReply(tool_calls=[("submit_answer", answer)])
