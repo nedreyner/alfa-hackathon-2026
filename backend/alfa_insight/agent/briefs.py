@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from alfa_insight.agent.schemas import Action, Insight, ProductOffer
 from alfa_insight.appctx import AppContext
+from alfa_insight.ranking.diversity import diversify_rows
 from alfa_insight.ranking.models import Direction, ImpactLevel, Role
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
@@ -61,7 +62,7 @@ def _words(item: BriefItem) -> int:
 
 
 def build_brief(app: AppContext, company_id: str, role: Role) -> Brief:
-    rows = RankingStore(app.db).top(company_id, role, limit=CANDIDATES)
+    rows = diversify_rows(RankingStore(app.db).top(company_id, role, limit=CANDIDATES * 5))[:CANDIDATES]
     insights = InsightStore(app.db).latest_by_events(
         company_id, [r["event_id"] for r in rows], statuses=("published",)
     )

@@ -10,6 +10,7 @@ from typing import Any
 from alfa_insight.agent.finalize import event_publishers
 from alfa_insight.appctx import AppContext
 from alfa_insight.errors import ValidationAppError
+from alfa_insight.ranking.diversity import diversify_rows
 from alfa_insight.services.insights import current_prompt_version
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
@@ -56,7 +57,7 @@ def build_feed(
 ) -> FeedPage:
     cfg = app.ranking_config.feed
     rows = RankingStore(app.db).top(company_id, role, min_score=cfg.min_score, limit=MAX_ROWS)
-    rows = [r for r in rows if r["relevance"] >= cfg.min_relevance]
+    rows = diversify_rows([r for r in rows if r["relevance"] >= cfg.min_relevance])
     version = current_prompt_version(app)
     profile_version = app.profiles.get(company_id).profile_version
     insights = {

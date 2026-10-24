@@ -9,5 +9,5 @@ export default defineConfig({
     proxy: { '/api': { target: 'http://localhost:8000', changeOrigin: false } },
   },
   build: { outDir: 'dist' },
-  test: { environment: 'jsdom', globals: false },
+  test: { environment: 'jsdom', globals: false, setupFiles: ['./src/test/setup.ts'] },
 });

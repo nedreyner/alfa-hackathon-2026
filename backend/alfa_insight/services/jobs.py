@@ -19,6 +19,7 @@ from alfa_insight.errors import (
     NotFoundError,
 )
 from alfa_insight.log import get_logger
+from alfa_insight.ranking.diversity import diversify_rows
 from alfa_insight.services.insights import find_current
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.rankings import RankingStore
@@ -291,7 +292,7 @@ def enqueue_precompute(
             continue
         role = roles.get(company_id, "cfo")
         picked = 0
-        for row in ranks.top(company_id, role, min_score=threshold, limit=k * 4):
+        for row in diversify_rows(ranks.top(company_id, role, min_score=threshold, limit=k * 10)):
             if picked >= k:
                 break
             ev = events.get(row["event_id"])

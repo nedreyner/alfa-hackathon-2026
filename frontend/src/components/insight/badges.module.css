@@ -1,0 +1,71 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.risk {
+  color: var(--ai-risk);
+  background: var(--ai-risk-bg);
+}
+
+.opportunity {
+  color: var(--ai-opportunity);
+  background: var(--ai-opportunity-bg);
+}
+
+.mixed {
+  color: var(--ai-mixed);
+  background: var(--ai-mixed-bg);
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ai-text-secondary);
+  white-space: nowrap;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--ai-border);
+}
+
+.dotOn {
+  background: var(--ai-text);
+}
+
+.dotCritical {
+  background: var(--ai-accent);
+}
+
+.small {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.warnPlate {
+  background: #fff6e0;
+  color: #7a5200;
+}
