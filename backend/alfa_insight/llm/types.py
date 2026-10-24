@@ -19,6 +19,7 @@ TaskName = Literal[
     "revise",
     "verify",
     "chat",
+    "eval_label",
 ]
 Strategy = Literal["auto", "tool_call", "json_schema", "json_object", "prompt_only"]
 BaseUrlKind = Literal["primary", "fallback"]

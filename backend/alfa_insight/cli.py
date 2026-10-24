@@ -7,6 +7,7 @@ import typer
 from alfa_insight import __version__
 from alfa_insight.data.commands import data_app
 from alfa_insight.demo_commands import demo_app
+from alfa_insight.evaluation.commands import eval_app
 from alfa_insight.ingest.commands import ingest_app, pipeline_app, seed_app
 from alfa_insight.ingest.macro_commands import macro_app
 from alfa_insight.ingest.research.commands import research_app
@@ -40,9 +41,7 @@ def _stub_group(name: str, help_text: str) -> typer.Typer:
     return group
 
 
-GROUPS: dict[str, str] = {
-    "eval": "Офлайн-оценка качества.",
-}
+GROUPS: dict[str, str] = {}
 
 for _name, _help in GROUPS.items():
     app.add_typer(_stub_group(_name, _help), name=_name)
@@ -91,6 +90,7 @@ app.add_typer(research_app, name="research")
 app.add_typer(search_app, name="search")
 app.add_typer(rank_app, name="rank")
 app.add_typer(demo_app, name="demo")
+app.add_typer(eval_app, name="eval")
 
 db_app = typer.Typer(help="SQLite: миграции и обслуживание.", no_args_is_help=True)
 app.add_typer(db_app, name="db")

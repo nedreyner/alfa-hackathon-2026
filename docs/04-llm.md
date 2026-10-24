@@ -50,6 +50,7 @@ tasks:
   revise:              {chain: [deepseek, kimi],      temperature: 0.1, max_tokens: 4000, priority: precompute,  strategy: auto,      timeout_s: 45}
   verify:              {chain: [glm, qwen_text],      temperature: 0,   max_tokens: 2000, priority: precompute,  strategy: auto,      timeout_s: 40,
                         exclude_drafter_family: true}
+  eval_label:          {chain: [kimi, deepseek],      temperature: 0,   max_tokens: 3000, priority: background,  strategy: auto,      timeout_s: 90}   # офлайн-оценка, 12-quality.md §2.3
   chat:                {chain: [kimi, deepseek],      temperature: 0.3, max_tokens: 1500, priority: interactive, strategy: tool_call, timeout_s: 30}
 ```
 

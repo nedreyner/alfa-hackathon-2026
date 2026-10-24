@@ -3605,6 +3605,156 @@
         ],
         "title": "MetaResponse"
       },
+      "OfflineSummary": {
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "labels_source": {
+            "type": "string",
+            "title": "Labels Source"
+          },
+          "judgements": {
+            "type": "integer",
+            "title": "Judgements"
+          },
+          "companies": {
+            "type": "integer",
+            "title": "Companies"
+          },
+          "kappa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kappa"
+          },
+          "ranking": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RankingVariant"
+            },
+            "type": "object",
+            "title": "Ranking"
+          },
+          "insights": {
+            "type": "integer",
+            "title": "Insights"
+          },
+          "grounded_share_llm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grounded Share Llm"
+          },
+          "completeness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completeness"
+          },
+          "personalization_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Personalization Rate"
+          },
+          "numbers_match_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numbers Match Rate"
+          },
+          "contradiction_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contradiction Rate"
+          },
+          "cost_rub_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Rub Mean"
+          },
+          "analyze_success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analyze Success Rate"
+          },
+          "analyze_p50_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analyze P50 Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generated_at",
+          "labels_source",
+          "judgements",
+          "companies",
+          "kappa",
+          "ranking",
+          "insights",
+          "grounded_share_llm",
+          "completeness",
+          "personalization_rate",
+          "numbers_match_rate",
+          "contradiction_rate",
+          "cost_rub_mean",
+          "analyze_success_rate",
+          "analyze_p50_ms"
+        ],
+        "title": "OfflineSummary",
+        "description": "Сводка `eval/reports/latest.json` для страницы «Качество» (полный отчёт — в репозитории)."
+      },
       "OnlineMetrics": {
         "properties": {
           "feedback_total": {
@@ -3938,14 +4088,12 @@
           "offline": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/OfflineSummary"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Offline"
+            ]
           },
           "online": {
             "$ref": "#/components/schemas/OnlineMetrics"
@@ -3975,6 +4123,34 @@
           "window_days"
         ],
         "title": "QualityResponse"
+      },
+      "RankingVariant": {
+        "properties": {
+          "ndcg5": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ndcg5"
+          },
+          "p5": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P5"
+          }
+        },
+        "type": "object",
+        "title": "RankingVariant"
       },
       "ReadyResponse": {
         "properties": {

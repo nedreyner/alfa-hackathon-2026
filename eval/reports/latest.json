@@ -1,0 +1,228 @@
+{
+  "generated_at": "2026-10-24T04:30:16Z",
+  "dataset": {
+    "companies": 6,
+    "judgements": 60,
+    "labels_source": "llm",
+    "human_labeled": 0,
+    "kappa": null,
+    "kappa_overlap": 0,
+    "seed_hash": "005a4853534b"
+  },
+  "ranking": {
+    "ndcg@5": 0.825,
+    "p@5": 0.6333,
+    "recall_rel3@5": 0.8889,
+    "spearman": 0.7025,
+    "direction_acc": 0.7667,
+    "per_company": {
+      "SYN-DEMO-01": {
+        "ndcg@5": 0.8180355296436479,
+        "p@5": 0.8,
+        "recall_rel3@5": 0.6666666666666666,
+        "spearman": 0.7763830000525274,
+        "direction_acc": 0.8
+      },
+      "SYN-DEMO-02": {
+        "ndcg@5": 0.9159332700480359,
+        "p@5": 0.8,
+        "recall_rel3@5": 1.0,
+        "spearman": 0.7503664793768668,
+        "direction_acc": 0.8
+      },
+      "SYN-DEMO-03": {
+        "ndcg@5": 0.801629878890335,
+        "p@5": 0.6,
+        "recall_rel3@5": 0.6666666666666666,
+        "spearman": 0.6621705251876221,
+        "direction_acc": 0.875
+      },
+      "SYN-DEMO-04": {
+        "ndcg@5": 0.9254800697133317,
+        "p@5": 0.6,
+        "recall_rel3@5": 1.0,
+        "spearman": 0.7956219919452866,
+        "direction_acc": 0.625
+      },
+      "SYN-DEMO-05": {
+        "ndcg@5": 0.9534989709086827,
+        "p@5": 0.6,
+        "recall_rel3@5": 1.0,
+        "spearman": 0.7291351444765135,
+        "direction_acc": 0.6666666666666666
+      },
+      "SYN-DEMO-06": {
+        "ndcg@5": 0.5354314225224457,
+        "p@5": 0.4,
+        "recall_rel3@5": 1.0,
+        "spearman": 0.501280411827603,
+        "direction_acc": 0.8333333333333334
+      }
+    },
+    "missing_events": 0,
+    "score_medians_by_rel": {
+      "0": 0.1434,
+      "1": 0.7994,
+      "2": 0.7487,
+      "3": 0.8371
+    },
+    "baselines": {
+      "random": {
+        "ndcg@5": 0.4293,
+        "p@5": 0.4003
+      },
+      "industry_only": {
+        "ndcg@5": 0.5011,
+        "p@5": 0.3667,
+        "recall_rel3@5": 0.6389,
+        "spearman": 0.2528,
+        "direction_acc": 0.5417
+      },
+      "no_payments": {
+        "ndcg@5": 0.8264,
+        "p@5": 0.6333,
+        "recall_rel3@5": 0.8889,
+        "spearman": 0.7129,
+        "direction_acc": 0.7667
+      }
+    }
+  },
+  "generation": {
+    "insights": 18,
+    "planned": 18,
+    "grounded_share_llm": 0.9802,
+    "completeness": 1.0,
+    "contradiction_rate": 0.2222,
+    "personalization_rate": 1.0,
+    "numbers_match_rate": 1.0,
+    "needs_review_share": 0.0,
+    "latency_ms": {
+      "p50": 26000,
+      "p95": 44000
+    },
+    "cost_rub_mean": 0.4881,
+    "grounded_share_human": null,
+    "judge_agreement": null,
+    "human_checked": 0
+  },
+  "analyze": {
+    "runs": 10,
+    "success_rate": 0.8,
+    "clear_outcome_rate": 1.0,
+    "latency_ms": {
+      "p50": 22556,
+      "p95": 51194
+    },
+    "items": [
+      {
+        "url": "https://www.interfax.ru/world/1124679",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 24735,
+        "cost_rub": 0.4564
+      },
+      {
+        "url": "https://www.interfax.ru/russia/1124678",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 17144,
+        "cost_rub": 0.2766
+      },
+      {
+        "url": "https://www.kommersant.ru/doc/9059393",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 51194,
+        "cost_rub": 0.7579
+      },
+      {
+        "url": "https://www.kommersant.ru/doc/9059296",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 27156,
+        "cost_rub": 0.3043
+      },
+      {
+        "url": "https://www.vedomosti.ru/politics/news/2026/10/24/1239803-posol-indii-rasskazal",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 20227,
+        "cost_rub": 0.2783
+      },
+      {
+        "url": "https://www.vedomosti.ru/politics/news/2026/10/23/1239799-genshtab-vsu-podtverdil",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 21471,
+        "cost_rub": 0.3069
+      },
+      {
+        "url": "https://tass.ru/armiya-i-opk/28248955",
+        "status": "failed",
+        "error_code": "fetch_failed",
+        "ms": 1051,
+        "cost_rub": 0.0
+      },
+      {
+        "url": "https://tass.ru/kosmos/28248951",
+        "status": "failed",
+        "error_code": "fetch_failed",
+        "ms": 1063,
+        "cost_rub": 0.0
+      },
+      {
+        "url": "https://www.kommersant.ru/doc/9059705",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 24369,
+        "cost_rub": 0.3309
+      },
+      {
+        "url": "https://www.kommersant.ru/doc/9059704",
+        "status": "succeeded",
+        "error_code": null,
+        "ms": 22556,
+        "cost_rub": 0.3982
+      }
+    ]
+  },
+  "config": {
+    "ranking_version": 1,
+    "channel_weights": {
+      "own": 1.0,
+      "supply": 0.9,
+      "demand": 0.8,
+      "factor": 0.7
+    },
+    "prompt_versions": {
+      "tagging": "tagging_v1+tx8",
+      "draft": "draft_v2",
+      "agent": "agent_v3",
+      "verify": "verify_v2",
+      "eval_label": "eval_label_v1"
+    },
+    "models": {
+      "tagging": [
+        "gemma",
+        "qwen_text"
+      ],
+      "draft": [
+        "deepseek",
+        "kimi"
+      ],
+      "agent": [
+        "deepseek",
+        "kimi"
+      ],
+      "verify": [
+        "glm",
+        "qwen_text"
+      ],
+      "eval_label": [
+        "kimi",
+        "deepseek"
+      ]
+    },
+    "llm_mode": "live"
+  }
+}

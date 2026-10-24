@@ -4,6 +4,7 @@ import { useQuality } from '../api/hooks';
 import { ErrorState } from '../components/common/ErrorState';
 import { SkeletonCard } from '../components/common/SkeletonCard';
 import { Section } from '../components/insight/Sections';
+import { OfflineReport } from '../components/quality/OfflineReport';
 import { formatCost, formatDuration, formatShare } from '../lib/format';
 import { BUDGET_MODE, ERROR_TEXT } from '../lib/labels';
 
@@ -39,7 +40,6 @@ export default function QualityPage() {
       </div>
     );
   const { online, budget, verification, offline } = q.data;
-  const off = offline as Record<string, number | string> | null;
   return (
     <div className="page">
       <h1 className="h1">Качество и бюджет</h1>
@@ -49,18 +49,8 @@ export default function QualityPage() {
       </p>
 
       <Section title="Офлайн-оценка" id="offline">
-        {off ? (
-          <div style={grid}>
-            {['ndcg@5', 'p@5', 'groundedness', 'completeness', 'contradiction_rate']
-              .filter((k) => k in off)
-              .map((k) => (
-                <Tile
-                  key={k}
-                  value={typeof off[k] === 'number' ? (off[k] as number).toFixed(2) : String(off[k])}
-                  label={k}
-                />
-              ))}
-          </div>
+        {offline ? (
+          <OfflineReport data={offline} />
         ) : (
           <p className="secondary">Отчёт офлайн-оценки ещё не сформирован (alfa eval report).</p>
         )}

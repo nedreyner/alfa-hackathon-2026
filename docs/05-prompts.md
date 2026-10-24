@@ -174,6 +174,10 @@ page_summary — одно предложение о том, чему посвя�
 Верни RerankOutput: оценку для каждого event_id.
 ```
 
+## 5а. Офлайн-разметка — `eval_label` (`eval_label_v1`)
+
+Предразметка офлайн-набора (`12-quality.md` §2.3): та же структура, что у `rerank`, но модель ставит и `relevance` 0–3, и `direction` (`risk`, `opportunity`, `mixed`, `none`), и `reason` — через что событие касается компании. Шкала релевантности — дословно из §2.1 `12-quality.md`, с просьбой не завышать оценки. Ответ — `EvalLabelOutput` (`alfa_insight/evaluation/labeling.py`), события пула компании — в одном вызове.
+
 ## 6. Агент: общий system — `agent.system.j2` (для `agent`, `draft`, `revise`)
 
 ```jinja

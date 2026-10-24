@@ -9,3 +9,4 @@ revise:           {version: revise_v2,           system: agent.system.j2,       
 verify:           {version: verify_v2,           system: verify.system.j2,           user: verify.user.j2}
 chat:             {version: chat_v2,             system: chat.system.j2,             user: chat.user.j2}
 ocr:              {version: ocr_v1,              system: ocr.system.j2,              user: ocr.user.j2}
+eval_label:       {version: eval_label_v1,       system: eval_label.system.j2,       user: eval_label.user.j2}

@@ -4,6 +4,8 @@ data/runtime/
 *.duckdb*
 *.sqlite*
 config/demo.real.yaml
+# Выборка утверждений для ручной проверки: в ней выдержки из аналитики банка (PDF кейса)
+eval/grounding_check.csv
 
 # Секреты
 .env

@@ -20,13 +20,10 @@ def test_help_lists_all_groups() -> None:
         "init",
         "worker",
         "precompute",
+        "eval",
+        "demo",
     ]:
         assert name in result.output
-
-
-def test_stub_returns_exit_code_2() -> None:
-    result = runner.invoke(app, ["eval"])  # ещё не реализована (T6.2)
-    assert result.exit_code == 2
 
 
 def test_init_is_idempotent() -> None:

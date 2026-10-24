@@ -194,3 +194,16 @@ export const CHAT_SUGGESTIONS = [
   'Покажи контрагентов в этой отрасли',
   'Где первоисточник?',
 ];
+
+/** Страница «Качество»: офлайн-оценка (12-quality.md §5). */
+export const RANKING_VARIANT: Record<string, string> = {
+  ours: 'Альфа Инсайт: цепная реакция',
+  no_payments: 'Без платёжных данных',
+  industry_only: 'Только своя отрасль',
+  random: 'Случайный порядок',
+};
+export const LABELS_SOURCE: Record<string, string> = {
+  human: 'ручная разметка',
+  llm: 'предразметка моделью, до ручной проверки',
+  none: 'разметки нет',
+};

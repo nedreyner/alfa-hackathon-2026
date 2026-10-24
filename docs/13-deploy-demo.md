@@ -81,6 +81,7 @@ COPY config/ /app/config/
 COPY data/reference/ /app/data/reference/
 COPY data/synthetic/ /app/data/synthetic/
 COPY data/seed/ /app/data/seed/
+COPY eval/reports/ /app/eval/reports/
 RUN useradd -m -u 10001 app && mkdir -p /app/data/runtime /app/data/raw && chown -R app /app/data/runtime
 COPY --chmod=755 backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENV PATH="/app/backend/.venv/bin:$PATH" DATA_DIR=/app/data CONFIG_DIR=/app/config

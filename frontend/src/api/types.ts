@@ -33,6 +33,7 @@ export type AnalyzeHistoryItem = S['AnalyzeHistoryItem'];
 export type AnalyzeInput = S['AnalyzeInput'];
 export type MacroResponse = S['MacroResponse'];
 export type QualityResponse = S['QualityResponse'];
+export type OfflineSummary = S['OfflineSummary'];
 export type ProductOffer = S['ProductOffer'];
 export type FeedbackIn = S['FeedbackIn'];
 

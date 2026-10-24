@@ -10,6 +10,7 @@ const TASK_COLORS: Record<string, string> = {
   ocr: '#c7c7cc',
   research_extract: '#dcdce0',
   tagging_interactive: '#2b2b30',
+  eval_label: '#5c5c62',
 };
 const TASK_RU: Record<string, string> = {
   tagging: 'разметка',
@@ -21,6 +22,7 @@ const TASK_RU: Record<string, string> = {
   chat: 'чат',
   ocr: 'OCR',
   research_extract: 'аналитика',
+  eval_label: 'офлайн-оценка',
 };
 
 export default function BudgetChart({ days }: { days: { day: string; by_task: Record<string, number> }[] }) {

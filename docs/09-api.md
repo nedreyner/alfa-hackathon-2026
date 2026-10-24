@@ -56,7 +56,7 @@ class SessionData(BaseModel):          # содержимое cookie (подпи
 | GET | `/api/insights/{insight_id}/chat?thread_id=` | История чата | `ChatThreadResponse` |
 | GET | `/api/sources/{source_id:path}` | Источник | `SourceDetail` |
 | GET | `/api/macro` | Ставка и курсы | `MacroResponse` |
-| GET | `/api/quality` | Метрики качества и бюджета | `QualityResponse` (`12-quality.md` §6) |
+| GET | `/api/quality` | Метрики качества и бюджета | `QualityResponse` (`12-quality.md` §6); `offline` — `OfflineSummary`: сводка `eval/reports/latest.json` (источник разметки, nDCG@5 и P@5 по вариантам `ours`, `industry_only`, `no_payments`, `random`, показатели генерации и фичи B) или `null` |
 | POST | `/api/ui-events` | Телеметрия интерфейса | 204 |
 | POST | `/api/leads` | Заявка на продукт (имитация) | `LeadOut` |
 | POST | `/api/admin/ingest/run` | Сбор + тик конвейера сейчас | `{started: true}` |

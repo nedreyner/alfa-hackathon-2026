@@ -44,8 +44,49 @@ class VerificationStats(BaseModel):
     avg_removed_claims: float | None
 
 
+class RankingVariant(BaseModel):
+    ndcg5: float | None = None
+    p5: float | None = None
+
+
+class OfflineSummary(BaseModel):
+    """Сводка `eval/reports/latest.json` для страницы «Качество» (полный отчёт — в репозитории)."""
+
+    generated_at: str
+    labels_source: str  # human | llm | none
+    judgements: int
+    companies: int
+    kappa: float | None
+    ranking: dict[str, RankingVariant]  # ours, industry_only, no_payments, random
+    insights: int
+    grounded_share_llm: float | None
+    completeness: float | None
+    personalization_rate: float | None
+    numbers_match_rate: float | None
+    contradiction_rate: float | None
+    cost_rub_mean: float | None
+    analyze_success_rate: float | None
+    analyze_p50_ms: int | None
+
+
+def offline_summary(rep: dict[str, Any]) -> OfflineSummary:
+    ds, rk, gen = rep["dataset"], rep["ranking"], rep["generation"]
+    variants = {"ours": rk, **rk.get("baselines", {})}
+    an = rep.get("analyze") or {}
+    return OfflineSummary(
+        generated_at=rep["generated_at"], labels_source=ds["labels_source"], judgements=ds["judgements"],
+        companies=ds["companies"], kappa=ds.get("kappa"),
+        ranking={k: RankingVariant(ndcg5=v.get("ndcg@5"), p5=v.get("p@5")) for k, v in variants.items()},
+        insights=gen["insights"], grounded_share_llm=gen.get("grounded_share_llm"),
+        completeness=gen.get("completeness"), personalization_rate=gen.get("personalization_rate"),
+        numbers_match_rate=gen.get("numbers_match_rate"), contradiction_rate=gen.get("contradiction_rate"),
+        cost_rub_mean=gen.get("cost_rub_mean"), analyze_success_rate=an.get("success_rate"),
+        analyze_p50_ms=(an.get("latency_ms") or {}).get("p50"),
+    )  # fmt: skip
+
+
 class QualityResponse(BaseModel):
-    offline: dict[str, Any] | None
+    offline: OfflineSummary | None
     online: OnlineMetrics
     budget: BudgetStats
     verification: VerificationStats
@@ -125,7 +166,7 @@ def quality(app: AppContext, window_days: int = WINDOW_DAYS) -> QualityResponse:
         avg_removed_claims=round(sum(v.get("removed_claims", 0) for _, v in ver) / len(ver), 3) if ver else None,
     )  # fmt: skip
     report = app.settings.repo_root / "eval" / "reports" / "latest.json"
-    offline = json.loads(report.read_text(encoding="utf-8")) if report.exists() else None
+    offline = offline_summary(json.loads(report.read_text(encoding="utf-8"))) if report.exists() else None
     return QualityResponse(
         offline=offline, online=online, budget=budget_stats, verification=verification,
         review_queue_size=len(store.review_queue()), window_days=window_days,

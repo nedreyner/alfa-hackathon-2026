@@ -1,0 +1,81 @@
+{
+  "runs": 10,
+  "success_rate": 0.8,
+  "clear_outcome_rate": 1.0,
+  "latency_ms": {
+    "p50": 22556,
+    "p95": 51194
+  },
+  "items": [
+    {
+      "url": "https://www.interfax.ru/world/1124679",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 24735,
+      "cost_rub": 0.4564
+    },
+    {
+      "url": "https://www.interfax.ru/russia/1124678",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 17144,
+      "cost_rub": 0.2766
+    },
+    {
+      "url": "https://www.kommersant.ru/doc/9059393",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 51194,
+      "cost_rub": 0.7579
+    },
+    {
+      "url": "https://www.kommersant.ru/doc/9059296",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 27156,
+      "cost_rub": 0.3043
+    },
+    {
+      "url": "https://www.vedomosti.ru/politics/news/2026/10/24/1239803-posol-indii-rasskazal",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 20227,
+      "cost_rub": 0.2783
+    },
+    {
+      "url": "https://www.vedomosti.ru/politics/news/2026/10/23/1239799-genshtab-vsu-podtverdil",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 21471,
+      "cost_rub": 0.3069
+    },
+    {
+      "url": "https://tass.ru/armiya-i-opk/28248955",
+      "status": "failed",
+      "error_code": "fetch_failed",
+      "ms": 1051,
+      "cost_rub": 0.0
+    },
+    {
+      "url": "https://tass.ru/kosmos/28248951",
+      "status": "failed",
+      "error_code": "fetch_failed",
+      "ms": 1063,
+      "cost_rub": 0.0
+    },
+    {
+      "url": "https://www.kommersant.ru/doc/9059705",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 24369,
+      "cost_rub": 0.3309
+    },
+    {
+      "url": "https://www.kommersant.ru/doc/9059704",
+      "status": "succeeded",
+      "error_code": null,
+      "ms": 22556,
+      "cost_rub": 0.3982
+    }
+  ]
+}

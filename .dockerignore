@@ -12,5 +12,6 @@ data/runtime/
 **/.pytest_cache/
 frontend/dist/
 .git/
-eval/
+eval/*
+!eval/reports/
 docs/
