@@ -115,3 +115,48 @@ def test_meaningful_statement_filter() -> None:
     assert not is_meaningful_statement("| Выпуск | Рейтинг (Акра/Эксперт РА/ НКР) | Цена на 20.07.2026 г. |")
     assert not is_meaningful_statement("2,500\n3,000\n3,500\n4,000\n4,500")
     assert not is_meaningful_statement("- 36%\n- 17%\n- 8%")
+
+
+def make_chart_pdf(path: Path) -> None:
+    """Страница 1 — текст, страница 2 — «график»: мало текста и много фигур (кандидат для vision)."""
+    font = _font()
+    c = canvas.Canvas(str(path), pagesize=A4)
+    c.setFont(font, 10)
+    y = 800
+    for line_no in range(14):
+        c.drawString(50, y, f"{line_no + 1}. {PARA[:95]}")
+        y -= 14
+    c.showPage()
+    c.setFont(font, 12)
+    c.drawString(50, 800, "Рис. 1. Ключевая ставка, %")
+    for i in range(60):
+        c.rect(60 + i * 8, 400, 6, 50 + (i % 10) * 10)
+    c.showPage()
+    c.save()
+
+
+async def test_vision_charts(ctx, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    from alfa_insight.ingest.research.extract import VisionDataPoint, VisionFigure
+    from alfa_insight.ingest.research.parse import ParsedPage
+    from alfa_insight.ingest.research.pipeline import chart_text, vision_candidate
+
+    assert vision_candidate(ParsedPage(page=1, text="", n_chars=30, n_drawings=60))
+    assert not vision_candidate(ParsedPage(page=1, text="", n_chars=900, n_drawings=60))
+    assert vision_candidate(ParsedPage(page=1, text="Рисунок 3. Инфляция", ocr=True))
+    assert not vision_candidate(ParsedPage(page=1, text="Только текст отчёта", ocr=True))
+    fig = VisionFigure(kind="chart", title="Ставка", description="Ставка снижается.",
+                       data_points=[VisionDataPoint(label="2026", value="14", unit="%", period="IV кв.")])  # fmt: skip
+    assert chart_text(fig) == "Ставка. Ставка снижается.\nДанные: 2026: 14 % (IV кв.)."
+
+    d = tmp_path / "research"
+    d.mkdir()
+    make_chart_pdf(d / "alfa_chart_2026_10.pdf")
+    first = await ingest_research(ctx, d)  # без --vision графиков нет
+    store = ResearchStore(ctx.db)
+    doc = store.doc_by_slug("alfa-chart-2026-10")
+    assert first.charts == 0 and not [c for c in store.chunks(doc["id"]) if c["kind"] == "chart"]  # type: ignore[index]
+    again = await ingest_research(ctx, d, vision=True)  # уже разобранный документ: только графики
+    charts = [c for c in store.chunks(doc["id"]) if c["kind"] == "chart"]  # type: ignore[index]
+    assert again.docs_skipped == 1 and again.pages_vision == 1 and charts
+    assert charts[0]["source_id"] == "alfa:alfa-chart-2026-10:p2:g1" and charts[0]["page"] == 2
+    assert (await ingest_research(ctx, d, vision=True)).pages_vision == 0  # повтор ничего не делает

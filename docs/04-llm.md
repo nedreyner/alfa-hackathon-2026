@@ -43,7 +43,7 @@ tasks:
   tagging:             {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: background,  strategy: auto,      timeout_s: 30}
   tagging_interactive: {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 1200, priority: interactive, strategy: auto,      timeout_s: 20, hedge_after_s: 4.5}
   research_extract:    {chain: [qwen_text, deepseek], temperature: 0,   max_tokens: 2000, priority: background,  strategy: auto,      timeout_s: 60}
-  vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 1500, priority: background,  strategy: json_object, timeout_s: 90}
+  vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 3000, priority: background,  strategy: json_object, timeout_s: 90}
   rerank:              {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 800,  priority: precompute,  strategy: auto,      timeout_s: 30}
   agent:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: interactive, strategy: tool_call, timeout_s: 45}
   draft:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: precompute,  strategy: auto,      timeout_s: 45}
@@ -345,7 +345,7 @@ class LLMBackend(Protocol):
 ```yaml
 tagging:          {version: tagging_v1,          system: tagging.system.j2,          user: tagging.user.j2}
 research_extract: {version: research_extract_v1, system: research_extract.system.j2, user: research_extract.user.j2}
-vision:           {version: vision_v1,           system: vision.system.j2,           user: vision.user.j2}
+vision:           {version: vision_v2,           system: vision.system.j2,           user: vision.user.j2}
 rerank:           {version: rerank_v1,           system: rerank.system.j2,           user: rerank.user.j2}
 agent:            {version: agent_v1,            system: agent.system.j2,            user: agent.user.j2}
 draft:            {version: draft_v1,            system: agent.system.j2,            user: draft.user.j2}

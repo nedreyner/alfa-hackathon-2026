@@ -32,7 +32,7 @@ tasks:
                         hedge_after_s: 4.5}
   research_extract:    {chain: [qwen_text, deepseek], temperature: 0,   max_tokens: 2000, priority: background,  strategy: auto,        timeout_s: 60, reasoning: false}
   ocr:                 {chain: [qwen_vl],             temperature: 0,   max_tokens: 4000, priority: background,  strategy: prompt_only, timeout_s: 150, reasoning: false, cache: false}
-  vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 1500, priority: background,  strategy: json_object, timeout_s: 90, reasoning: false}
+  vision:              {chain: [qwen_vl],             temperature: 0,   max_tokens: 3000, priority: background,  strategy: json_object, timeout_s: 90, reasoning: false}
   rerank:              {chain: [gemma, qwen_text],    temperature: 0,   max_tokens: 800,  priority: precompute,  strategy: auto,        timeout_s: 30, reasoning: false}
   agent:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: interactive, strategy: tool_call,   timeout_s: 45, reasoning: false}
   draft:               {chain: [deepseek, kimi],      temperature: 0.2, max_tokens: 4000, priority: precompute,  strategy: auto,        timeout_s: 45, reasoning: false}

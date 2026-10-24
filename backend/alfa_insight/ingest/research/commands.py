@@ -31,10 +31,11 @@ def research_ingest(
     if not path.exists():
         typer.echo(f"{path}: каталога нет, пропуск")
         return
-    stats = asyncio.run(ingest_research(ctx, path, max_cost_rub=max_cost))
+    stats = asyncio.run(ingest_research(ctx, path, max_cost_rub=max_cost, vision=vision))
     typer.echo(
         f"документов {stats.docs_total}: обработано {stats.docs_processed}, без изменений {stats.docs_skipped}; "
-        f"распознано страниц {stats.pages_ocr}, чанков {stats.chunks}, элементов {stats.items}, {stats.cost_rub:.2f} ₽"
+        f"распознано страниц {stats.pages_ocr}, чанков {stats.chunks}, элементов {stats.items}, "
+        f"графиков {stats.charts} на {stats.pages_vision} стр., {stats.cost_rub:.2f} ₽"
     )
     for err in stats.errors:
         typer.echo(f"ошибка: {err}", err=True)

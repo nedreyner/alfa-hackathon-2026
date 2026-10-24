@@ -13,9 +13,16 @@ import yaml
 from alfa_insight.appctx import AppContext
 from alfa_insight.errors import BudgetExceeded, LLMError
 from alfa_insight.ingest.research.chunk import Chunk, chunk_page
-from alfa_insight.ingest.research.extract import MIN_PAGE_CHARS, ResearchExtraction, postprocess_items
-from alfa_insight.ingest.research.parse import ParsedDoc, parse_pdf, sha256_file
+from alfa_insight.ingest.research.extract import (
+    MIN_PAGE_CHARS,
+    ResearchExtraction,
+    VisionFigure,
+    VisionOutput,
+    postprocess_items,
+)
+from alfa_insight.ingest.research.parse import ParsedDoc, ParsedPage, parse_pdf, render_page_jpeg, sha256_file
 from alfa_insight.ingest.tagging import taxonomy_ctx
+from alfa_insight.llm.fake import fake_handler
 from alfa_insight.llm.types import ImagePart, LLMRequest, Message, TextPart
 from alfa_insight.log import get_logger
 from alfa_insight.store.research import ResearchStore
@@ -38,6 +45,8 @@ class ResearchStats:
     docs_processed: int = 0
     docs_skipped: int = 0
     pages_ocr: int = 0
+    pages_vision: int = 0
+    charts: int = 0
     chunks: int = 0
     items: int = 0
     cost_rub: float = 0.0
@@ -107,6 +116,81 @@ async def _ocr_page(ctx: AppContext, stats: ResearchStats, title: str, page: int
     return res.content or ""
 
 
+# Признаки рисунка в распознанном тексте скана: OCR переносит подписи, а точки графика теряются
+FIGURE_MARKERS = re.compile(r"\b(рис(унок|\.)|график|диаграмм|источник:|figure|chart)", re.I)
+VISION_MAX_CHARS = 400
+VISION_MIN_DRAWINGS = 50
+
+
+def vision_candidate(page: ParsedPage) -> bool:
+    """§11.3: векторный график (мало текста, много фигур), страница с картинкой и малым текстом или скан
+    с подписью рисунка. Скан — всегда одна картинка, поэтому для сканов нужна подпись: иначе в vision ушли бы
+    все страницы."""
+    if page.n_chars < VISION_MAX_CHARS and page.n_drawings > VISION_MIN_DRAWINGS:
+        return True
+    if page.ocr:
+        return bool(FIGURE_MARKERS.search(page.text))
+    return page.n_chars < VISION_MAX_CHARS and page.n_images > 0
+
+
+def chart_text(fig: VisionFigure) -> str:
+    """Текст чанка `chart`: описание и точки данных строками — так их находит поиск и видит агент."""
+    head = f"{fig.title}. " if fig.title else ""
+    points = "; ".join(
+        f"{p.label}: {p.value}{' ' + p.unit if p.unit else ''}{f' ({p.period})' if p.period else ''}"
+        for p in fig.data_points
+    )
+    return f"{head}{fig.description}" + (f"\nДанные: {points}." if points else "")
+
+
+async def _vision_page(ctx: AppContext, title: str, page: int, image_url: str) -> tuple[VisionOutput, float]:
+    rendered = ctx.prompts.render("vision", page=page, doc_title=title)
+    system, user = rendered.messages
+    res = await ctx.router.structured(
+        task="vision",
+        messages=[
+            system,
+            Message(
+                role="user", content=[TextPart(text=user.text()), ImagePart(image_url={"url": image_url})]
+            ),
+        ],
+        schema=VisionOutput,
+        prompt_version=rendered.version,
+    )
+    return res.value, res.raw.usage.cost_rub
+
+
+async def add_charts(
+    ctx: AppContext,
+    path: Path,
+    doc_id: int,
+    slug: str,
+    title: str,
+    pages: list[ParsedPage],
+    stats: ResearchStats,
+    *,
+    max_cost_rub: float | None,
+) -> None:
+    """Графики страниц-кандидатов → чанки `kind=chart` (`alfa:{slug}:p{page}:g{n}`); флаг `--vision`."""
+    store = ResearchStore(ctx.db)
+    for page in pages:
+        if not vision_candidate(page):
+            continue
+        if max_cost_rub is not None and stats.cost_rub >= max_cost_rub:
+            raise BudgetExceeded("run", "Достигнут --max-cost")
+        out, cost = await _vision_page(ctx, title, page.page, render_page_jpeg(path, page.page))
+        stats.cost_rub += cost
+        stats.pages_vision += 1
+        for n, fig in enumerate((f for f in out.figures if f.kind in ("chart", "table")), 1):
+            text = chart_text(fig)
+            store.add_chunk(
+                doc_id, source_id=f"alfa:{slug}:p{page.page}:g{n}", page=page.page, chunk_no=1000 + n,
+                kind="chart", heading=fig.title or page.heading, text=text,
+                heading_lemmas=lemmas_str(fig.title or page.heading or ""), text_lemmas=lemmas_str(text),
+            )  # fmt: skip
+            stats.charts += 1
+
+
 async def _extract_page(
     ctx: AppContext, title: str, doc_date: str | None, page: int, heading: str | None, chunks: list[Chunk]
 ) -> tuple[ResearchExtraction, float]:
@@ -129,7 +213,13 @@ async def _extract_page(
 
 
 async def ingest_doc(
-    ctx: AppContext, path: Path, meta: dict[str, Any], stats: ResearchStats, *, max_cost_rub: float | None
+    ctx: AppContext,
+    path: Path,
+    meta: dict[str, Any],
+    stats: ResearchStats,
+    *,
+    max_cost_rub: float | None,
+    vision: bool = False,
 ) -> None:
     store = ResearchStore(ctx.db)
     slug = slugify(path.name)
@@ -193,11 +283,18 @@ async def ingest_doc(
         for chunk_no, items in by_chunk.items():
             store.add_items(ids[chunk_no], items)
             stats.items += len(items)
+    if vision:
+        await add_charts(ctx, path, doc_id, slug, title, doc.pages, stats, max_cost_rub=max_cost_rub)
     store.set_doc_status(doc_id, "extracted")
 
 
+async def _cached_only(page: int, image_url: str) -> str:
+    """Повторный разбор ради графиков: OCR только из кеша на диске; промах — ошибка, без платного вызова."""
+    raise LLMError(f"OCR страницы {page} нет в кеше")
+
+
 async def ingest_research(
-    ctx: AppContext, directory: Path, *, max_cost_rub: float | None = None
+    ctx: AppContext, directory: Path, *, max_cost_rub: float | None = None, vision: bool = False
 ) -> ResearchStats:
     store = ResearchStore(ctx.db)
     meta = load_meta(ctx.settings.config_path / "research_meta.yaml", directory / "meta.yaml")
@@ -208,6 +305,20 @@ async def ingest_research(
         existing = store.doc_by_slug(slug)
         sha = sha256_file(path)
         if existing and existing["sha256"] == sha and existing["status"] == "extracted":
+            has_charts = any(c["kind"] == "chart" for c in store.chunks(existing["id"]))
+            if (
+                vision and not has_charts
+            ):  # документ уже разобран — только графики (OCR берётся из кеша на диске)
+                try:
+                    doc = await parse_pdf(
+                        path, ocr=_cached_only, ocr_cache_dir=ctx.settings.runtime_dir / "research_ocr"
+                    )
+                    await add_charts(ctx, path, existing["id"], slug, existing["title"], doc.pages, stats,
+                                     max_cost_rub=max_cost_rub)  # fmt: skip
+                except BudgetExceeded:
+                    break
+                except LLMError as exc:
+                    stats.errors.append(f"{path.name}: vision {exc.code}")
             stats.docs_skipped += 1
             continue
         if existing:
@@ -227,3 +338,21 @@ async def ingest_research(
             if failed:
                 store.set_doc_status(failed["id"], "failed")
     return stats
+
+
+@fake_handler("vision")
+def fake_vision(req: LLMRequest, payload: dict[str, Any]) -> dict[str, Any]:
+    """FakeLLM: один график с двумя точками — для офлайн-разработки и тестов."""
+    return {
+        "figures": [
+            {
+                "kind": "chart",
+                "title": "Ключевая ставка, %",
+                "description": "Ключевая ставка снижается с пика прошлого года.",
+                "data_points": [
+                    {"label": "2025", "value": "16", "unit": "%", "period": "конец года"},
+                    {"label": "2026", "value": "14", "unit": "%", "period": "октябрь"},
+                ],
+            }
+        ]
+    }
