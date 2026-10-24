@@ -86,6 +86,8 @@ class AgentContext:
     started_at: datetime
     cost_rub: float = 0.0
     tool_calls: int = 0
+    exposure: Exposure | None = None  # результат compute_exposure по текущему событию
+    path_eids: dict[str, str] = {}    # P1 → E-id пути — для chain_block и графа
 ```
 
 `allowed_event_ids` изначально содержит текущее событие. Его пополняют только `event_id` из результатов `search_news`.
@@ -108,10 +110,13 @@ class EvidenceItem(BaseModel):
     numbers: list[float]            # нормализованные значимые числа из text (text/numbers.py)
     untrusted: bool                 # news, alfa, user_input → True
     meta: dict[str, Any] = {}       # page, doc_title, path_key, indicator, …
+    full_text: str                  # до 4000 символов, не сериализуется — для open_evidence в чате
 
 class EvidenceRegistry:
     def add(self, *, source_id: str, kind: SourceKind, title: str, text: str, **kw) -> EvidenceItem
-        # повторный source_id → возвращает существующий элемент (тот же eid)
+        # повторный source_id → возвращает существующий элемент (тот же eid);
+        # text_chars=… — свой лимит обрезки (профиль компании — 4000)
+    def try_add(self, **kw) -> EvidenceItem | None      # при заполненном реестре (max_evidence) новый не добавляется
     def get(self, eid: str) -> EvidenceItem | None
     def all(self) -> list[EvidenceItem]
     def kind_label(self, item: EvidenceItem) -> str   # «Новость», «Аналитика Альфа-Банка», «Данные ЦБ», «Ваши данные», «Ваш текст»

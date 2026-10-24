@@ -447,6 +447,33 @@ class ProfileStore:
         items.sort(key=lambda s: (0 if s.is_demo else 1, order.get(s.company_id, 0), s.company_id))
         return items
 
+    def group_members(self, company_id: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Другие компании той же группы (`companies.group_id`); ИП маскируются."""
+        rows = self.duck.rows(
+            "SELECT c.company_id, c.name, c.inn, c.okved, c.region_name, "
+            "c.company_id IN (SELECT company_id FROM target_companies) AS is_target "
+            "FROM companies c WHERE c.group_id = (SELECT group_id FROM companies WHERE company_id = ?) "
+            "AND c.group_id IS NOT NULL AND c.company_id <> ? ORDER BY c.revenue_rub DESC NULLS LAST, c.company_id LIMIT ?",
+            [company_id, company_id, int(limit)],
+        )
+        out = []
+        for r in rows:
+            name = IP_LABEL if is_individual(r.get("inn"), r["name"]) else r["name"]
+            iid = self.taxonomy.match_okved(r.get("okved"))
+            out.append(
+                {
+                    "company_id": r["company_id"],
+                    "name": name,
+                    "industry_id": iid,
+                    "industry_name": self.taxonomy.industry(iid).name
+                    if iid in self.taxonomy.industries
+                    else iid,
+                    "region_name": r.get("region_name"),
+                    "is_target": bool(r["is_target"]),
+                }
+            )
+        return out
+
     def company_ids(self) -> list[str]:
         return [
             r["company_id"] for r in self.duck.rows("SELECT company_id FROM profiles ORDER BY company_id")

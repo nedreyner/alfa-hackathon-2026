@@ -13,7 +13,7 @@ from alfa_insight.agent.trace import TraceWriter
 from alfa_insight.appctx import AppContext
 from alfa_insight.data.models import CompanyProfile
 from alfa_insight.llm.types import Priority
-from alfa_insight.ranking.models import Role
+from alfa_insight.ranking.models import Exposure, Role
 from alfa_insight.timeutil import utc_now
 
 RunKind = Literal["insight", "analyze", "chat"]
@@ -52,6 +52,8 @@ class AgentContext:
     started_at: datetime = field(default_factory=utc_now)
     cost_rub: float = 0.0
     tool_calls: int = 0
+    exposure: Exposure | None = None  # результат compute_exposure по текущему событию
+    path_eids: dict[str, str] = field(default_factory=dict)  # P1 → E4
 
     @classmethod
     def create(
