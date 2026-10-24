@@ -213,7 +213,8 @@ def test_pass_rule_and_issues(actx: AgentContext) -> None:
     d = base_draft()
     d["consequences"][0]["claim"]["text"] = "Себестоимость объектов вырастет [[MISSING]]."
     _, rep = asyncio.run(verify(actx, InsightDraft.model_validate(d), INPUTS))
-    assert not rep.passed and rep.missing and "Не хватает ответа: что делать" in rep.issues
+    # все блоки на месте — «missing» судьи не блокирует, но попадает в замечания
+    assert rep.passed and rep.missing and "Не хватает ответа: что делать" in rep.issues
     trace = [t.type for t in RunStore(actx.app.db).trace(actx.run_id)]
     assert "verify.report" in trace and "llm.call" not in trace  # слушатель трассы подключает runtime
 
@@ -264,3 +265,15 @@ def test_degradation(actx: AgentContext) -> None:
     res = degrade(fixed, rep)
     assert res.status == "needs_review" and res.draft.bank_view.available is False
     assert res.draft.bank_view.alignment == "no_data"
+
+
+def test_internal_ids_stripped(actx: AgentContext) -> None:
+    d = base_draft()
+    d["consequences"][0]["claim"]["text"] = (
+        "Путь влияния P1 указывает на рост затрат, это видно в источниках E1 и E2."
+    )
+    fixed, r = checks(actx, d)
+    assert r["internal_ids"].status == "warn" and r["internal_ids"].paths == ["consequences[0].claim"]
+    assert (
+        fixed.consequences[0].claim.text == "Путь влияния указывает на рост затрат, это видно в источниках."
+    )

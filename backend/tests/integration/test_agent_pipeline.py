@@ -7,6 +7,7 @@ import pytest
 from alfa_insight.agent.schemas import Insight
 from alfa_insight.errors import BudgetExceeded
 from alfa_insight.ingest.macro import load_snapshot
+from alfa_insight.services.insights import current_prompt_version
 from alfa_insight.services.jobs import JobRunner
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
@@ -58,7 +59,7 @@ def test_insight_end_to_end(seeded_ctx) -> None:  # type: ignore[no-untyped-def]
     assert 0 < ins.confidence.value <= 1 and ins.confidence.reasons
     assert ins.verification.attempts >= 1 and ins.event.id == event_id and ins.event.publishers
     assert (
-        ins.prompt_version == "draft_v1+verify_v1"
+        ins.prompt_version == current_prompt_version(app)
         and ins.profile_version == app.profiles.get(COMPANY).profile_version
     )
     private = [s for s in ins.sources if s.kind == "client_data"]

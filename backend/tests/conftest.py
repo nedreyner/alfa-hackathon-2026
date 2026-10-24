@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -11,9 +12,22 @@ import pytest
 os.environ["LLM_MODE"] = "fake"
 os.environ["LLM_API_KEY"] = "test-key"
 
-from alfa_insight.settings import Settings, get_settings, load_settings
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _isolated_data_dir() -> Path:
+    """Настройки по умолчанию (get_settings, CLI) в тестах смотрят во временный каталог, а не в data/ репозитория."""
+    root = Path(tempfile.mkdtemp(prefix="alfa-test-data-"))
+    (root / "runtime").mkdir()
+    for name in ("reference", "synthetic", "seed"):
+        (root / name).symlink_to(REPO_ROOT / "data" / name)
+    return root
+
+
+os.environ["DATA_DIR"] = str(_isolated_data_dir())
+os.environ["INGEST_ENABLED"] = "false"
+
+from alfa_insight.settings import Settings, get_settings, load_settings  # noqa: E402
 
 
 @pytest.fixture

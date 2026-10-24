@@ -10,6 +10,7 @@ import pytest
 from alfa_insight.agent.intake import AnalyzeInput
 from alfa_insight.llm import build_router
 from alfa_insight.llm.fake import FakeBackend
+from alfa_insight.services.insights import current_prompt_version
 from alfa_insight.services.jobs import JobRunner
 from alfa_insight.store.events import EventStore
 from alfa_insight.store.insights import InsightStore
@@ -95,7 +96,7 @@ def test_two_rounds_to_insight(app) -> None:  # type: ignore[no-untyped-def]
     ins = InsightStore(app.db).get(run.insight_id)
     assert (
         ins is not None
-        and ins.prompt_version == "agent_v1+verify_v1"
+        and ins.prompt_version == f"{app.prompts.version('agent')}+{app.prompts.version('verify')}"
         and ins.payload["event"]["visibility"] == "private"
     )
     assert any(s["id"].startswith("user:") for s in ins.payload["sources"])
@@ -123,7 +124,7 @@ def test_forced_submit_and_no_tools(app, monkeypatch: pytest.MonkeyPatch) -> Non
     run, trace = analyze(app, AnalyzeInput(text=METAL_TEXT.replace("8%", "9%")))
     assert run.status == "succeeded"
     assert any("пакетный режим" in t.title for t in trace if t.type == "plan")
-    assert InsightStore(app.db).get(run.insight_id).prompt_version == "draft_v1+verify_v1"  # type: ignore[union-attr]
+    assert InsightStore(app.db).get(run.insight_id).prompt_version == current_prompt_version(app)  # type: ignore[union-attr]
 
 
 def test_intake_url_reuse_and_errors(app) -> None:  # type: ignore[no-untyped-def]

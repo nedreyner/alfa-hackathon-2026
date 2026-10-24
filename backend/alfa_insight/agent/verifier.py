@@ -49,6 +49,18 @@ _BANNED = [
 ]  # fmt: skip
 
 
+_IDS = re.compile(r"\s*[(\[]?\b[EP]\d{1,2}(?:\s*(?:,|/|и)\s*[EP]?\d{1,2})*\b[)\]]?")
+_NO_NEWS = re.compile(r"^\s*(?:противоречий\b.*\bне\b|нет противоречий|не выявлено)", re.I)
+
+
+def strip_internal_ids(text: str) -> str:
+    """Убрать E3, P1, «E3/E5», «(E1, E2)» из текста; пунктуацию и пробелы — подчистить."""
+    out = _IDS.sub("", text)
+    out = re.sub(r"\s+([,.;:!?)])", r"\1", out)
+    out = re.sub(r"\(\s*\)", "", out)
+    return re.sub(r"\s{2,}", " ", out).strip()
+
+
 def _domain(url: str) -> str:
     host = re.sub(r"^(?:https?://)?(?:www\.)?", "", url.lower()).split("/")[0]
     return host.split(":")[0]
@@ -226,6 +238,25 @@ def deterministic_checks(
            f"Ссылки и домены не из источников: {', '.join(sorted(set(found)))}" if bad else "Посторонних ссылок нет",
            sorted(set(bad)))  # fmt: skip
 
+    # internal_ids (автоисправление): «в источнике E3», «путь P1» — клиенту эти id не видны
+    cleaned = []
+    for p, c in d.claims():
+        fixed_text = strip_internal_ids(c.text)
+        if fixed_text != c.text and len(fixed_text) >= 8:
+            c.text = fixed_text
+            cleaned.append(p)
+    for cons in d.consequences:
+        cons.title = strip_internal_ids(cons.title) or cons.title
+    for act in d.actions:
+        act.title = strip_internal_ids(act.title) or act.title
+    d.headline, d.why_you = (
+        strip_internal_ids(d.headline) or d.headline,
+        strip_internal_ids(d.why_you) or d.why_you,
+    )
+    ch.add("internal_ids", "warn" if cleaned else "pass",
+           "Из текстов убраны служебные идентификаторы источников" if cleaned else "Служебных идентификаторов в тексте нет",
+           cleaned)  # fmt: skip
+
     # banned_phrases
     hits, hit_paths = [], []
     for p, text in texts:
@@ -373,14 +404,16 @@ async def verify(
     out = None if skip else await judge(ctx, fixed, exclude_families)
     llm_skipped = out is None
     verdicts = out.verdicts if out else []
-    contradictions = out.contradictions if out else []
+    contradictions = [c for c in (out.contradictions if out else []) if not _NO_NEWS.match(c)]
     missing = out.missing if out else []
+    # missing блокирует, только если обязательный блок действительно пуст (судья склонен перечислять пожелания)
+    blocks_complete = all(r.status == "pass" for r in checks if r.code == "completeness")
     share = supported_share(fixed, checks, verdicts, llm_skipped)
     passed = (
         not any(r.status == "fail" for r in checks)
         and share >= PASS_SUPPORTED_SHARE
         and not any(v.verdict == "contradicted" for v in verdicts)
-        and not missing
+        and (blocks_complete or not missing)
     )
     report = VerificationReport(
         passed=passed, attempt=attempt, checks=checks, verdicts=verdicts, contradictions=contradictions,

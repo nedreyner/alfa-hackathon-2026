@@ -27,3 +27,14 @@ def test_help_lists_all_groups() -> None:
 def test_stub_returns_exit_code_2() -> None:
     result = runner.invoke(app, ["init"])  # ещё не реализована (T6.x)
     assert result.exit_code == 2
+
+
+def test_default_settings_are_isolated_from_repo_data() -> None:
+    """CLI в тестах (get_settings) не должен видеть рабочую базу data/runtime репозитория."""
+    from pathlib import Path
+
+    from alfa_insight.settings import get_settings
+
+    get_settings.cache_clear()
+    repo_data = Path(__file__).resolve().parents[3] / "data"
+    assert get_settings().data_dir != repo_data and get_settings().llm_mode == "fake"
