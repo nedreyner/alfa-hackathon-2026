@@ -1,81 +1,67 @@
 {
-  "runs": 10,
-  "success_rate": 0.8,
+  "runs": 8,
+  "success_rate": 1.0,
   "clear_outcome_rate": 1.0,
   "latency_ms": {
-    "p50": 22556,
-    "p95": 51194
+    "p50": 20993,
+    "p95": 27848
   },
   "items": [
     {
-      "url": "https://www.interfax.ru/world/1124679",
+      "url": "https://www.interfax.ru/russia/1124689",
       "status": "succeeded",
       "error_code": null,
-      "ms": 24735,
-      "cost_rub": 0.4564
+      "ms": 27386,
+      "cost_rub": 0.4449
     },
     {
-      "url": "https://www.interfax.ru/russia/1124678",
+      "url": "https://www.interfax.ru/russia/1124687",
       "status": "succeeded",
       "error_code": null,
-      "ms": 17144,
-      "cost_rub": 0.2766
+      "ms": 22663,
+      "cost_rub": 0.287
     },
     {
-      "url": "https://www.kommersant.ru/doc/9059393",
+      "url": "https://www.interfax.ru/russia/1124685",
       "status": "succeeded",
       "error_code": null,
-      "ms": 51194,
-      "cost_rub": 0.7579
+      "ms": 23946,
+      "cost_rub": 0.2993
     },
     {
-      "url": "https://www.kommersant.ru/doc/9059296",
+      "url": "https://www.kommersant.ru/doc/9059709",
       "status": "succeeded",
       "error_code": null,
-      "ms": 27156,
-      "cost_rub": 0.3043
+      "ms": 18224,
+      "cost_rub": 0.2631
     },
     {
-      "url": "https://www.vedomosti.ru/politics/news/2026/10/24/1239803-posol-indii-rasskazal",
+      "url": "https://www.kommersant.ru/doc/9059702",
       "status": "succeeded",
       "error_code": null,
-      "ms": 20227,
-      "cost_rub": 0.2783
+      "ms": 19661,
+      "cost_rub": 0.3026
     },
     {
-      "url": "https://www.vedomosti.ru/politics/news/2026/10/23/1239799-genshtab-vsu-podtverdil",
+      "url": "https://www.kommersant.ru/doc/9059701",
       "status": "succeeded",
       "error_code": null,
-      "ms": 21471,
-      "cost_rub": 0.3069
+      "ms": 27848,
+      "cost_rub": 0.4218
     },
     {
-      "url": "https://tass.ru/armiya-i-opk/28248955",
-      "status": "failed",
-      "error_code": "fetch_failed",
-      "ms": 1051,
-      "cost_rub": 0.0
-    },
-    {
-      "url": "https://tass.ru/kosmos/28248951",
-      "status": "failed",
-      "error_code": "fetch_failed",
-      "ms": 1063,
-      "cost_rub": 0.0
-    },
-    {
-      "url": "https://www.kommersant.ru/doc/9059705",
+      "url": "https://www.vedomosti.ru/society/news/2026/10/24/1239817-shkolnie-kanikuli",
       "status": "succeeded",
       "error_code": null,
-      "ms": 24369,
-      "cost_rub": 0.3309
+      "ms": 18800,
+      "cost_rub": 0.2555
     },
     {
-      "url": "https://www.kommersant.ru/doc/9059704",
+      "url": "https://www.vedomosti.ru/politics/news/2026/10/24/1239816-yunosheskaya-sbornaya",
       "status": "succeeded",
       "error_code": null,
-      "ms": 22556,
-      "cost_rub": 0.3982
+      "ms": 20993,
+      "cost_rub": 0.3065
     }
   ]
 }
