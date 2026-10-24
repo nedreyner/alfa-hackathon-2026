@@ -106,3 +106,12 @@ async def test_ingest_pdf_fixture(ctx, tmp_path: Path) -> None:  # type: ignore[
     changed = await ingest_research(ctx, d)
     assert changed.docs_processed == 1
     assert store.counts()["research_docs"] == 1
+
+
+def test_meaningful_statement_filter() -> None:
+    from alfa_insight.ingest.research.extract import is_meaningful_statement
+
+    assert is_meaningful_statement("Мы повышаем наш прогноз по инфляции по итогам 2026 г. до 7,5% г/г.")
+    assert not is_meaningful_statement("| Выпуск | Рейтинг (Акра/Эксперт РА/ НКР) | Цена на 20.07.2026 г. |")
+    assert not is_meaningful_statement("2,500\n3,000\n3,500\n4,000\n4,500")
+    assert not is_meaningful_statement("- 36%\n- 17%\n- 8%")

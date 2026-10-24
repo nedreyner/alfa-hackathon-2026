@@ -55,10 +55,24 @@ class VisionOutput(BaseModel):
     figures: list[VisionFigure] = Field(default_factory=list, max_length=6)
 
 
+MIN_STATEMENT_WORDS = 5
+MIN_LETTER_SHARE = 0.55
+
+
+def is_meaningful_statement(text: str) -> bool:
+    """Отсекает мусор OCR: подписи осей, столбцы чисел, шапки таблиц — это не тезисы аналитиков."""
+    t = text.strip()
+    if not t or t.startswith(("|", "-", "•")) or t.count("\n") > 2 or t.count("|") >= 2:
+        return False
+    letters = sum(ch.isalpha() for ch in t)
+    words = [w for w in re.findall(r"[^\W\d_]{2,}", t)]
+    return len(words) >= MIN_STATEMENT_WORDS and letters / max(1, len(t.replace(" ", ""))) >= MIN_LETTER_SHARE
+
+
 def postprocess_items(out: ResearchExtraction, chunk_nos: set[int], tax: Taxonomy) -> list[dict[str, Any]]:
     items = []
     for it in out.items:
-        if it.chunk_no not in chunk_nos:
+        if it.chunk_no not in chunk_nos or not is_meaningful_statement(it.statement):
             continue
         d = it.model_dump()
         d["industries"] = [i for i in it.industries if i in tax.industries and i != "unknown"]
