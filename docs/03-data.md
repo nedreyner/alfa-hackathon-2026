@@ -685,28 +685,28 @@ companies:
     story: Дилер китайских марок. Утильсбор, пошлины, юань, автокредиты и ставка
     default_role: cfo
   - company_id: SYN-DEMO-04
-    name: ООО «АгроТрейд Восток»
-    okved: "46.21"
+    name: ООО «АгроХим Трейд»
+    okved: "46.75"
     region_code: RU-NVS
     region_name: Новосибирская область
     revenue_rub: 18_000_000_000
     products: {credit: 1_200_000_000, leasing: 150_000_000}
-    ved: [{country: CN, direction: export}, {country: KZ, direction: export}]
-    suppliers_mix: {agriculture: 0.70, transport_logistics: 0.15, wholesale_fuel: 0.05, unknown: 0.10}
-    buyers_mix: {food_production: 0.40, wholesale_agri_food: 0.30, unknown: 0.30}
-    story: Экспортёр зерна. Экспортные пошлины и квоты, логистика на восток, юань, платежи из Китая
+    ved: [{country: CN, direction: export}, {country: IN, direction: export}]
+    suppliers_mix: {chemicals: 0.70, transport_logistics: 0.15, wholesale_fuel: 0.05, unknown: 0.10}
+    buyers_mix: {agriculture: 0.55, wholesale_agri_food: 0.15, unknown: 0.30}
+    story: Экспортёр удобрений. Изъятие сверхдоходов у производителей удобрений, результаты поставщиков, крепкий рубль и юань против экспортной выручки, логистика
     default_role: treasurer
   - company_id: SYN-DEMO-05
-    name: АО «ФармДистрибуция»
-    okved: "46.46"
-    region_code: RU-SPE
-    region_name: Санкт-Петербург
+    name: АО «ТрансЛогистик Урал»
+    okved: "49.41"
+    region_code: RU-SVE
+    region_name: Свердловская область
     revenue_rub: 27_000_000_000
-    products: {credit: 1_500_000_000}
-    ved: [{country: IN, direction: import}, {country: CN, direction: import}]
-    suppliers_mix: {pharma: 0.55, wholesale_chemicals: 0.10, transport_logistics: 0.10, unknown: 0.25}
-    buyers_mix: {retail: 0.60, public_social: 0.30, unknown: 0.10}
-    story: Дистрибьютор лекарств. Рупия и юань, маркировка и регулирование, госзакупки
+    products: {credit: 1_500_000_000, leasing: 2_500_000_000}
+    ved: [{country: CN, direction: import}]
+    suppliers_mix: {wholesale_fuel: 0.40, auto_trade: 0.20, finance_insurance: 0.15, machinery: 0.10, unknown: 0.15}
+    buyers_mix: {retail: 0.30, wholesale_other: 0.25, metallurgy: 0.20, chemicals: 0.10, unknown: 0.15}
+    story: Грузоперевозчик. Цены на топливо и дизель, ситуация на сети РЖД и ставки на перевозки, стоимость контейнеров из Китая, лизинг техники и ключевая ставка
     default_role: treasurer
   - company_id: SYN-DEMO-06
     name: ООО «Топливная компания Регион»
@@ -728,6 +728,8 @@ precompute:
   top_k: 5
   min_score: 0.15
 ```
+
+Истории SYN-DEMO-04 и SYN-DEMO-05 скорректированы под собранные новости (T2.4, 24.10.2026): под экспорт зерна и фармдистрибуцию в лентах за два месяца не нашлось и трёх новостей, поэтому DEMO-04 — экспортёр удобрений, DEMO-05 — грузоперевозчик.
 
 Генератор создаёт демо-компании точно по этим долям (с шумом ±1 п. п. и контрагентами под нужные отрасли), остальных — случайно. При `DATA_PROFILE=real` демо-компании берутся из `config/demo.real.yaml` (6 реальных целевых `company_id`, выбираются в T5.5). Этот файл в `.gitignore`.
 

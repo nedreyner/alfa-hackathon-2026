@@ -12,6 +12,7 @@ TaskName = Literal[
     "tagging_interactive",
     "research_extract",
     "vision",
+    "ocr",
     "rerank",
     "agent",
     "draft",

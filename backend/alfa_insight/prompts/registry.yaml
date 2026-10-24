@@ -8,3 +8,4 @@ draft:            {version: draft_v1,            system: agent.system.j2,       
 revise:           {version: revise_v1,           system: agent.system.j2,            user: revise.user.j2}
 verify:           {version: verify_v1,           system: verify.system.j2,           user: verify.user.j2}
 chat:             {version: chat_v1,             system: chat.system.j2,             user: chat.user.j2}
+ocr:              {version: ocr_v1,              system: ocr.system.j2,              user: ocr.user.j2}
