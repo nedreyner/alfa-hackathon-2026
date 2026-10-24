@@ -308,6 +308,22 @@ def enqueue_precompute(
             ):
                 continue
             planned.append((0 if company_id in demo else 1, -row["score"], company_id, role, ev.id))
+        if company_id in demo:  # брифинги всех трёх ролей демо-компании открываются сразу готовыми
+            from alfa_insight.agent.briefs import build_brief
+
+            have = {p[4] for p in planned if p[2] == company_id}
+            for brief_role in ("cfo", "treasurer", "owner"):
+                for item in build_brief(app, company_id, brief_role).items:  # type: ignore[arg-type]
+                    if item.status == "pending" and item.event_id not in have:
+                        ev = events.get(item.event_id)
+                        if ev is None or ev.injection_suspected or ev.visibility != "public":
+                            continue
+                        if (
+                            find_current(app, company_id, ev.id) is None
+                            and runs.active_for(company_id, ev.id) is None
+                        ):
+                            planned.append((0, -item.score, company_id, brief_role, ev.id))
+                            have.add(ev.id)
     planned.sort()
     for _demo, _score, cid, run_role, event_id in planned:
         runs.create(

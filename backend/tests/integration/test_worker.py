@@ -68,7 +68,10 @@ def test_precompute_selection(seeded_ctx) -> None:  # type: ignore[no-untyped-de
     runs = RunStore(app.db)
     pending = [r for r in runs.list_for_company("SYN-DEMO-02", "insight") if r.status == "queued"]
     assert queued >= 2 and top[0]["event_id"] not in {r.event_id for r in pending}
-    assert all(r.priority == "precompute" and r.role == role for r in pending)
+    assert all(r.priority == "precompute" for r in pending)
+    # top-K — в роли по умолчанию; пункты брифингов демо-компании — в ролях брифингов
+    assert top[1]["event_id"] in {r.event_id for r in pending if r.role == role}
+    assert {r.role for r in pending} <= {"cfo", "treasurer", "owner"}
 
     done = asyncio.run(JobRunner(app).process_queue(limit=2))
     assert done == 2
@@ -76,4 +79,11 @@ def test_precompute_selection(seeded_ctx) -> None:  # type: ignore[no-untyped-de
     assert statuses.get("succeeded") == 2, statuses
     assert sum(InsightStore(app.db).count_by_status().values()) == 2
     # повтор: готовые и стоящие в очереди пары не дублируются
-    assert enqueue_precompute(app, companies=["SYN-DEMO-02", "SYN-DEMO-01"], top_k=2) == 0
+    # (брифинг после готовых инсайтов может сдвинуться и добавить новое событие — это не дубль)
+    enqueue_precompute(app, companies=["SYN-DEMO-02", "SYN-DEMO-01"], top_k=2)
+    pairs = [
+        (r.company_id, r.event_id)
+        for c in ("SYN-DEMO-02", "SYN-DEMO-01")
+        for r in runs.list_for_company(c, "insight")
+    ]
+    assert len(pairs) == len(set(pairs))

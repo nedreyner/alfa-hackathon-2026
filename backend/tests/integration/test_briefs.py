@@ -57,3 +57,23 @@ def test_pick_action_by_role() -> None:
     )
     action, product = pick_action(ins, "owner")  # действия для собственника нет → первое
     assert action is ins.actions[0] and product is None
+
+
+def test_distinct_themes() -> None:
+    from alfa_insight.agent.briefs import distinct_themes
+
+    items = ["rate1", "rate2", "duty", "rate3", "fx"]
+    theme = lambda s: {s.rstrip("0123456789")}  # noqa: E731
+    assert distinct_themes(items, theme, 3) == ["rate1", "duty", "fx"]
+    assert distinct_themes(["rate1", "rate2", "duty"], theme, 3) == [
+        "rate1",
+        "duty",
+        "rate2",
+    ]  # добор по порядку
+    # тема по любому из тегов: инфляция с главным путём через ставку не встаёт рядом с решением по ставке
+    tags = {
+        "rate": {"type:policy", "factor:key_rate"},
+        "cpi": {"type:macro", "factor:key_rate"},
+        "duty": {"type:tariff"},
+    }
+    assert distinct_themes(["rate", "cpi", "duty"], lambda s: tags[s], 2) == ["rate", "duty"]

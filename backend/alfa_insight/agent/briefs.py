@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from datetime import datetime
 from typing import Literal
 
@@ -61,6 +62,24 @@ def _words(item: BriefItem) -> int:
     return sum(len(p.split()) for p in parts)
 
 
+def distinct_themes[T](items: list[T], tags: Callable[[T], set[str]], n: int) -> list[T]:
+    """Первые n по порядку, но без повторов темы (тип события или главный путь влияния); не хватило — добор.
+
+    Одно решение ЦБ часто приходит несколькими событиями (решение, пресс-конференция, комментарии),
+    и без этого брифинг из трёх пунктов превращается в три пересказа ставки.
+    """
+    picked: list[T] = []
+    seen: set[str] = set()
+    for it in items:
+        if not tags(it) & seen:
+            picked.append(it)
+            seen |= tags(it)
+        if len(picked) == n:
+            return picked
+    rest = [it for it in items if it not in picked]
+    return picked + rest[: n - len(picked)]
+
+
 def build_brief(app: AppContext, company_id: str, role: Role) -> Brief:
     rows = diversify_rows(RankingStore(app.db).top(company_id, role, limit=CANDIDATES * 5))[:CANDIDATES]
     insights = InsightStore(app.db).latest_by_events(
@@ -96,7 +115,10 @@ def build_brief(app: AppContext, company_id: str, role: Role) -> Brief:
         score=lambda i: i.score * READY_BOOST if i.status == "ready" else i.score,
         key=lambda i: keys[i.event_id],
     )
-    top = ordered[:BRIEF_ITEMS]
+    themes = {r["event_id"]: (ev.event_type if (ev := events.get(r["event_id"])) else "") for r in rows}
+    top = distinct_themes(
+        ordered, lambda i: {f"type:{themes.get(i.event_id, '')}", keys[i.event_id]}, BRIEF_ITEMS
+    )
     words = sum(_words(i) for i in top)
     return Brief(
         role=role,
